@@ -95,11 +95,18 @@ def insert_default(database):
         cursor.execute("""INSERT INTO tab
                           VALUES (NULL, ?, 'Unknown', 5, 20);""", (configuration_id,))
 
+        # insert 100 cells for the "Unknown" tab
+        tab_id = cursor.lastrowid  # id of the "Unknown" tab
+        for row in range(20):
+            for column in range(5):
+                cursor.execute("""INSERT INTO cell (tab_id, row, column)
+                                  VALUES (?, ?, ?)""", (tab_id, row, column))
+
     # check if default address exists
     cursor.execute("SELECT id FROM address WHERE ip_port='127.0.0.1:64363'")
     rows = cursor.fetchall()
 
-    if len(rows) == 0: # Default address doesn't exist
+    if len(rows) == 0:  # Default address doesn't exist
         # insert default IP address and port into address table
         cursor.execute("INSERT INTO address VALUES (NULL, '127.0.0.1:64363', julianday('now'))")
 
