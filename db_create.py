@@ -31,8 +31,8 @@ def create_tables(database):
                                   id integer PRIMARY KEY,
                                   configuration_id integer NOT NULL,
                                   name text NOT NULL,
-                                  grid_width integer NOT NULL DEFAULT 5,
-                                  grid_height integer NOT NULL DEFAULT 2,
+                                  grid_width integer NOT NULL DEFAULT 2,
+                                  grid_height integer NOT NULL DEFAULT 5,
                                   FOREIGN KEY (configuration_id) REFERENCES configuration (id) 
                                                                  ON DELETE CASCADE
                               );"""
@@ -111,6 +111,7 @@ def insert_default(database):
         cursor.execute("INSERT INTO address VALUES (NULL, '127.0.0.1:64363', julianday('now'))")
 
     database.commit()
+
 
 def main():
     """ Create the configuration database, its tables and add the default configuration """
