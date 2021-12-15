@@ -2,18 +2,19 @@ import sqlite3
 
 
 def create_tables(database):
-    """ Create database tables
-    :param database: Database connection object
-    :return:
+    """ Create database tables if they don't exist
+    :parameter database: Database connection object
+    :return: None
+    throws sqlite3.Error exception
     """
     # create SQL codes for table creation
     sql_create_configuration_table = """CREATE TABLE IF NOT EXISTS configuration (
                                              id integer PRIMARY KEY,
                                              name text NOT NULL UNIQUE,
-                                             show_unknown_sensors integer NOT NULL,
-                                             show_model integer NOT NULL,
-                                             model_chamber_text text NOT NULL,
-                                             model_control_text text NOT NULL
+                                             show_unknown_sensors integer NOT NULL DEFAULT 0,
+                                             show_model integer NOT NULL DEFAULT 0,
+                                             model_chamber_text text DEFAULT NULL,
+                                             model_control_text text DEFAULT NULL
                                          );"""
 
     sql_create_sensor_table = """CREATE TABLE IF NOT EXISTS sensor (
@@ -73,6 +74,37 @@ def create_tables(database):
         raise
 
 
+def insert_default(database):
+    """ Insert default configuration values if they don't exist
+    :parameter database: Database connection object
+    :return: None
+    throws sqlite3.Error exception
+    """
+
+    # check if default configuration exists
+    cursor = database.cursor()
+    cursor.execute("SELECT id FROM configuration WHERE name='Default'")
+    rows = cursor.fetchall()
+
+    if len(rows) == 0:  # Default configuration doesn't exist
+        # insert default configuration and unknown sensor tab for the configuration
+        cursor.execute("""INSERT INTO configuration
+                          VALUES (NULL, 'Default', 1, 0, NULL, NULL);""")
+
+        configuration_id = cursor.lastrowid  # id of the default configuration
+        cursor.execute("""INSERT INTO tab
+                          VALUES (NULL, ?, 'Unknown', 5, 20);""", (configuration_id,))
+
+    # check if default address exists
+    cursor.execute("SELECT id FROM address WHERE ip_port='127.0.0.1:64363'")
+    rows = cursor.fetchall()
+
+    if len(rows) == 0: # Default address doesn't exist
+        # insert default IP address and port into address table
+        cursor.execute("INSERT INTO address VALUES (NULL, '127.0.0.1:64363', julianday('now'))")
+
+    database.commit()
+
 def main():
     """ Create the configuration database, its tables and add the default configuration """
     # create a new database
@@ -86,6 +118,14 @@ def main():
     # create tables if they don't exist
     try:
         create_tables(database)
+    except sqlite3.Error as error:
+        print(error)
+        database.close()  # in case of an error close the connection to the DB
+        return  # and stop
+
+    # add default configuration if it doesn't exist
+    try:
+        insert_default(database)
     except sqlite3.Error as error:
         print(error)
         database.close()  # in case of an error close the connection to the DB
