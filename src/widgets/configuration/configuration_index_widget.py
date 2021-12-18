@@ -1,14 +1,14 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QMargins
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, QLabel
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
-from src.models.configuration import Configuration
+from src.models.models import Configuration
 
 
 class ConfigurationIndexWidget(QWidget):
     """ Widget responsible for showing all configurations.
-    Allows searching, showing selected configuration and creating new configuration
+    Allows searching, showing selected configuration and creating new configurations
     """
 
     def __init__(self, db_session):
@@ -27,6 +27,7 @@ class ConfigurationIndexWidget(QWidget):
         self._title.text = "Configurations"
         self._title.font = QFont("Lato", 18)
         self._title.alignment = Qt.AlignCenter
+        self._title.contents_margins = QMargins(10, 10, 10, 20)
 
         # create a search field
         self._search_line_edit = QLineEdit()
