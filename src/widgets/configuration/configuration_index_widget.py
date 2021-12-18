@@ -1,11 +1,13 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, QLabel
 # noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property
+from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 from src.models.configuration import Configuration
 
 
 class ConfigurationIndexWidget(QWidget):
-    """ Widget responsible to show all configurations.
+    """ Widget responsible for showing all configurations.
     Allows searching, showing selected configuration and creating new configuration
     """
 
@@ -13,23 +15,27 @@ class ConfigurationIndexWidget(QWidget):
         super().__init__()
         self._db_session = db_session
 
-        self.window_title = "Configurations"
-        self.resize(600, 400)
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
         """ Initialize UI """
         # create a layout
-        self.layout = QVBoxLayout(self)
+        self._layout = QVBoxLayout(self)
+
+        # create a title
+        self._title = QLabel()
+        self._title.text = "Configurations"
+        self._title.font = QFont("Lato", 18)
+        self._title.alignment = Qt.AlignCenter
 
         # create a search field
-        self.search_line_edit = QLineEdit()
-        self.search_line_edit.placeholder_text = "Search"
-        self.search_line_edit.textChanged.connect(self._search)
+        self._search_line_edit = QLineEdit()
+        self._search_line_edit.placeholder_text = "Search"
+        self._search_line_edit.textChanged.connect(self._search)
 
         # create a list widget for configurations
-        self.configurations_list = QListWidget()
-        self.configurations_list.alternating_row_colors = True
+        self._configurations_list = QListWidget()
+        self._configurations_list.alternating_row_colors = True
 
         # get all configurations from DB
         all_configurations = self._db_session.query(Configuration)\
@@ -37,11 +43,15 @@ class ConfigurationIndexWidget(QWidget):
 
         # add configurations to the list widget
         for configuration in all_configurations:
-            item = QListWidgetItem(str(configuration), self.configurations_list)
+            QListWidgetItem(str(configuration), self._configurations_list)
+
+        # show selected configuration on double click
+        self._configurations_list.itemDoubleClicked.connect(self._show_selected_configuration)
 
         # add widgets to layout
-        self.layout.add_widget(self.search_line_edit)
-        self.layout.add_widget(self.configurations_list)
+        self._layout.add_widget(self._title)
+        self._layout.add_widget(self._search_line_edit)
+        self._layout.add_widget(self._configurations_list)
 
     def _search(self, search_string):
         """ Filter configuration by the search string """
@@ -52,9 +62,17 @@ class ConfigurationIndexWidget(QWidget):
             Configuration.name.like(search_string)).order_by(Configuration.name).all()
 
         # clear current list and fill it with filtered configurations
-        self.configurations_list.clear()
+        self._configurations_list.clear()
         for configuration in filtered_configurations:
-            item = QListWidgetItem(str(configuration), self.configurations_list)
+            QListWidgetItem(str(configuration), self._configurations_list)
 
+    def _show_selected_configuration(self, list_item):
+        configuration_name = list_item.data(0)  # get selected configuration name
 
+        # find configuration in DB
+        configuration = self._db_session.query(Configuration)\
+            .where(Configuration.name == configuration_name).one_or_none()
+
+        if configuration is not None:  # if configuration found
+            self.parent_widget().view_configuration(configuration)
 
