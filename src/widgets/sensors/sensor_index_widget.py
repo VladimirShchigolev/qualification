@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, QLabel
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, QLabel, QHBoxLayout, \
+    QPushButton
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
@@ -49,10 +50,21 @@ class SensorIndexWidget(QWidget):
         # show selected sensor on double click
         self._sensors_list.itemDoubleClicked.connect(self._show_selected_sensor)
 
+        # create buttons
+        self._buttons_layout = QHBoxLayout()
+
+        self._new_button = QPushButton("New")
+        self._view_button = QPushButton("View")
+
+        self._buttons_layout.add_widget(self._new_button)
+        self._buttons_layout.add_stretch(1)  # move view button to the right
+        self._buttons_layout.add_widget(self._view_button)
+
         # add widgets to layout
         self._layout.add_widget(self._title)
         self._layout.add_widget(self._search_line_edit)
         self._layout.add_widget(self._sensors_list)
+        self._layout.add_layout(self._buttons_layout)
 
     def _search(self, search_string):
         """ Filter configuration by the search string """
@@ -75,7 +87,5 @@ class SensorIndexWidget(QWidget):
             .where(Sensor.short_name == sensor_short_name).one_or_none()
 
         if sensor is not None:  # if sensor found
-            print(sensor)
-            print(self._configuration)
-            #self.parent_widget().view_sensor(sensor)
+            self.parent_widget().parent_widget().view_sensor(sensor)
 

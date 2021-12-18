@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt, QMargins
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, QLabel
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, QLabel, QHBoxLayout, \
+    QPushButton
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 from src.models.models import Configuration
@@ -27,7 +28,7 @@ class ConfigurationIndexWidget(QWidget):
         self._title.text = "Configurations"
         self._title.font = QFont("Lato", 18)
         self._title.alignment = Qt.AlignCenter
-        self._title.contents_margins = QMargins(10, 10, 10, 20)
+        self._title.set_contents_margins(10, 10, 10, 20)
 
         # create a search field
         self._search_line_edit = QLineEdit()
@@ -49,10 +50,26 @@ class ConfigurationIndexWidget(QWidget):
         # show selected configuration on double click
         self._configurations_list.itemDoubleClicked.connect(self._show_selected_configuration)
 
+        # create buttons
+        self._buttons_layout = QHBoxLayout()
+
+        self._new_button = QPushButton("New")
+        self._load_button = QPushButton("Load")
+        self._view_button = QPushButton("View")
+        self._close_button = QPushButton("Close")
+        #self._back_button.clicked.connect(self._index_configurations)
+
+        self._buttons_layout.add_widget(self._new_button)
+        self._buttons_layout.add_widget(self._load_button)
+        self._buttons_layout.add_widget(self._view_button)
+        self._buttons_layout.add_stretch(1)  # move close button to the right
+        self._buttons_layout.add_widget(self._close_button)
+
         # add widgets to layout
         self._layout.add_widget(self._title)
         self._layout.add_widget(self._search_line_edit)
         self._layout.add_widget(self._configurations_list)
+        self._layout.add_layout(self._buttons_layout)
 
     def _search(self, search_string):
         """ Filter configuration by the search string """

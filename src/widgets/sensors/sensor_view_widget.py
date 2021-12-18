@@ -4,16 +4,14 @@ from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayo
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
-from src.widgets.sensors.sensor_index_widget import SensorIndexWidget
 
+class SensorViewWidget(QWidget):
+    """ Widget for viewing a certain sensor """
 
-class ConfigurationViewWidget(QWidget):
-    """ Widget for viewing a certain configuration """
-
-    def __init__(self, db_session, configuration):
+    def __init__(self, db_session, sensor):
         super().__init__()
         self._db_session = db_session
-        self._configuration = configuration
+        self._sensor = sensor
 
         self._init_ui()  # initialize UI
 
@@ -27,31 +25,39 @@ class ConfigurationViewWidget(QWidget):
 
         # create a title
         self._title = QLabel()
-        self._title.text = "View Configuration"
+        self._title.text = "View Sensor"
         self._title.font = QFont("Lato", 18)
         self._title.alignment = Qt.AlignCenter
         self._title.set_contents_margins(10, 10, 10, 20)
 
+        # create short name field display
+        self._short_name_line = QLineEdit()
+        self._short_name_line.text = self._sensor.short_name
+        self._short_name_line.read_only = True
+
         # create name field display
         self._name_line = QLineEdit()
-        self._name_line.text = self._configuration.name
+        self._name_line.text = self._sensor.name
         self._name_line.read_only = True
 
-        # create sensors and tabs display
-        self._sensors_and_tabs_layout = QHBoxLayout()
+        # create physical value field display
+        self._physical_value_line = QLineEdit()
+        self._physical_value_line.text = self._sensor.physical_value
+        self._physical_value_line.read_only = True
 
-        self._sensors_widget = SensorIndexWidget(self._db_session, self._configuration)
-        self._sensors_and_tabs_layout.add_widget(self._sensors_widget)
+        # create physical unit field display
+        self._physical_unit_line = QLineEdit()
+        self._physical_unit_line.text = self._sensor.physical_unit
+        self._physical_unit_line.read_only = True
+
 
         # create buttons
         self._buttons_layout = QHBoxLayout()
 
-        self._load_button = QPushButton("Load")
         self._edit_button = QPushButton("Edit")
-        self._back_button = QPushButton("Back To Configurations")
-        self._back_button.clicked.connect(self._index_configurations)
+        self._back_button = QPushButton("Back To Configuration")
+        self._back_button.clicked.connect(self._return_to_configuration)
 
-        self._buttons_layout.add_widget(self._load_button)
         self._buttons_layout.add_widget(self._edit_button)
         self._buttons_layout.add_stretch(1)  # move back button to the right
         self._buttons_layout.add_widget(self._back_button)
@@ -59,14 +65,16 @@ class ConfigurationViewWidget(QWidget):
         # add widgets to layout
         # add configuration data
         self._form_layout.add_row(self._title)
+        self._form_layout.add_row("Short Name:", self._short_name_line)
         self._form_layout.add_row("Name:", self._name_line)
+        self._form_layout.add_row("Physical Value:", self._physical_value_line)
+        self._form_layout.add_row("Physical Unit:", self._physical_unit_line)
         self._layout.add_layout(self._form_layout)
-        self._layout.add_layout(self._sensors_and_tabs_layout)
 
         self._layout.add_stretch(1)
 
         # add buttons
         self._layout.add_layout(self._buttons_layout)
 
-    def _index_configurations(self):
-        self.parent_widget().index_configurations()
+    def _return_to_configuration(self):
+        self.parent_widget().view_configuration(self._sensor.configuration)
