@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
-from src.models.models import Configuration, Sensor
+from src.models.models import Sensor
 
 
 class SensorIndexWidget(QWidget):

@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayo
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
 from src.widgets.sensors.sensor_index_widget import SensorIndexWidget
+from src.widgets.tabs.tab_index_widget import TabIndexWidget
 
 
 class ConfigurationViewWidget(QWidget):
@@ -43,6 +44,9 @@ class ConfigurationViewWidget(QWidget):
 
         self._sensors_widget = SensorIndexWidget(self._db_session, self._configuration)
         self._sensors_and_tabs_layout.add_widget(self._sensors_widget)
+
+        self._tabs_widget = TabIndexWidget(self._db_session, self._configuration)
+        self._sensors_and_tabs_layout.add_widget(self._tabs_widget)
 
         # create buttons
         self._buttons_layout = QHBoxLayout()

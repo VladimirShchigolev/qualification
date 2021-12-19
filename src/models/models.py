@@ -87,3 +87,28 @@ class Sensor(Base):
 
 
 Configuration.sensors = relationship("Sensor", order_by=Sensor.short_name, back_populates="configuration")
+
+
+class Tab(Base):
+    """ Tab model """
+    __tablename__ = 'tab'
+
+    # table fields
+    id = Column(Integer, primary_key=True)
+    configuration_id = Column(Integer, ForeignKey('configuration.id'), nullable=False)
+    name = Column(String, nullable=False)
+    grid_width = Column(Integer, nullable=False, default=2)
+    grid_height = Column(Integer, nullable=False, default=5)
+
+    configuration = relationship("Configuration", back_populates="tabs")
+
+    def __repr__(self):
+        """ Create string representation of a tab object """
+        return f'Tab({self.name})'
+
+    def __str__(self):
+        """ Create a string value of a tab object """
+        return self.name
+
+
+Configuration.tabs = relationship("Tab", order_by=Tab.name, back_populates="configuration")
