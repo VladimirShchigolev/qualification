@@ -50,7 +50,7 @@ class Sensor(Base):
         return self.short_name
 
     @staticmethod
-    def validate(configuration, short_name, name, physical_value, physical_unit):
+    def validate(configuration, short_name, name, physical_value, physical_unit, check_for_duplicates=True):
         """ Check if given fields are valid """
 
         # short name length
@@ -61,14 +61,15 @@ class Sensor(Base):
         if not re.match("^[a-zA-Z0-9_]+$", short_name):
             raise ValueError("Short name should consist of upper and lower English letters, digits and underscores!")
 
-        # check if sensor with such short name exists in this configuration
-        exists = False
-        for sensor in configuration.sensors:
-            if sensor.short_name == short_name:
-                exists = True
-                break
-        if exists:
-            raise ValueError("A sensor with such short name already exists in this configuration")
+        if check_for_duplicates:
+            # check if sensor with such short name exists in this configuration
+            exists = False
+            for sensor in configuration.sensors:
+                if sensor.short_name == short_name:
+                    exists = True
+                    break
+            if exists:
+                raise ValueError("A sensor with such short name already exists in this configuration")
 
         # name length
         if not 0 < len(name) < 30:

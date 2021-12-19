@@ -5,6 +5,7 @@ from __feature__ import snake_case, true_property  # snake_case enabled for Pysi
 from src.widgets.configuration.configuration_index_widget import ConfigurationIndexWidget
 from src.widgets.configuration.configuration_view_widget import ConfigurationViewWidget
 from src.widgets.sensors.sensor_create_widget import SensorCreateWidget
+from src.widgets.sensors.sensor_edit_widget import SensorEditWidget
 from src.widgets.sensors.sensor_view_widget import SensorViewWidget
 
 
@@ -56,7 +57,7 @@ class ConfigurationSettingsWindow(QWidget):
         self._layout.add_widget(self._widget)
 
     def create_sensor(self, configuration):
-        """ Create new sensor """
+        """ open sensor creation page """
         self._clear_window()
 
         # open sensor creation; set central widget to sensor create widget
@@ -69,4 +70,12 @@ class ConfigurationSettingsWindow(QWidget):
 
         # show selected sensor; set central widget to sensor view widget
         self._widget = SensorViewWidget(self._db_session, sensor)
+        self._layout.add_widget(self._widget)
+
+    def edit_sensor(self, sensor):
+        """ open sensor editing page """
+        self._clear_window()
+
+        # open editing page; set central widget to sensor edit widget
+        self._widget = SensorEditWidget(self._db_session, sensor)
         self._layout.add_widget(self._widget)

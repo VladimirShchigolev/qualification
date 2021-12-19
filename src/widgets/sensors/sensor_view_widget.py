@@ -57,6 +57,7 @@ class SensorViewWidget(QWidget):
         self._buttons_layout.contents_margins = QMargins(10, 0, 10, 0)
 
         self._edit_button = QPushButton("Edit")
+        self._edit_button.clicked.connect(self._edit_sensor)
         self._back_button = QPushButton("Back To Configuration")
         self._back_button.clicked.connect(self._return_to_configuration)
 
@@ -77,6 +78,10 @@ class SensorViewWidget(QWidget):
 
         # add buttons
         self._layout.add_layout(self._buttons_layout)
+
+    def _edit_sensor(self):
+        """ open sensor editing page """
+        self.parent_widget().edit_sensor(self._sensor)
 
     def _return_to_configuration(self):
         """ open back the configuration creation/view/editing page """
