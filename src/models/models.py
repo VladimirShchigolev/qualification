@@ -33,7 +33,7 @@ class Sensor(Base):
 
     # table fields
     id = Column(Integer, primary_key=True)
-    configuration_id = Column(Integer, ForeignKey('configuration.id'),nullable=False)
+    configuration_id = Column(Integer, ForeignKey('configuration.id'), nullable=False)
     short_name = Column(String, nullable=False)
     name = Column(String, nullable=False)
     physical_value = Column(String, nullable=False)

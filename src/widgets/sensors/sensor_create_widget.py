@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt, QMargins, QRegularExpression
 from PySide6.QtGui import QFont, QRegularExpressionValidator
 from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, QVBoxLayout, \
-    QComboBox, QCompleter, QMessageBox
+    QComboBox, QMessageBox
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 

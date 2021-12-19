@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt, QMargins, QRegularExpression
 from PySide6.QtGui import QFont, QRegularExpressionValidator
 from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, QVBoxLayout, \
-    QComboBox, QCompleter, QMessageBox
+    QComboBox, QMessageBox
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
@@ -9,7 +9,7 @@ from src.models.models import Sensor
 
 
 class SensorEditWidget(QWidget):
-    """ Widget for creating a sensor """
+    """ Widget for editing a sensor """
 
     def __init__(self, db_session, sensor):
         super().__init__()
@@ -138,7 +138,8 @@ class SensorEditWidget(QWidget):
         physical_value = self._physical_value_line.current_text
         physical_unit = self._physical_unit_line.current_text
 
-        check_for_duplicates = self._sensor.short_name != short_name  # if short name gets changed, check for duplicates
+        # if short name gets changed, check for duplicates
+        check_for_duplicates = self._sensor.short_name != short_name
 
         # check if data is valid
         validation_passed = False

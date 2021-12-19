@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt, QMargins
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, QVBoxLayout, \
+    QMessageBox
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
@@ -58,10 +59,15 @@ class SensorViewWidget(QWidget):
 
         self._edit_button = QPushButton("Edit")
         self._edit_button.clicked.connect(self._edit_sensor)
+
+        self._delete_button = QPushButton("Delete")
+        self._delete_button.clicked.connect(self._delete)
+
         self._back_button = QPushButton("Back To Configuration")
         self._back_button.clicked.connect(self._return_to_configuration)
 
         self._buttons_layout.add_widget(self._edit_button)
+        self._buttons_layout.add_widget(self._delete_button)
         self._buttons_layout.add_stretch(1)  # move back button to the right
         self._buttons_layout.add_widget(self._back_button)
 
@@ -78,6 +84,19 @@ class SensorViewWidget(QWidget):
 
         # add buttons
         self._layout.add_layout(self._buttons_layout)
+
+    def _delete(self):
+        """ Removes the sensor from database """
+        # ask for confirmation
+        confirmation = QMessageBox.question(self, "Delete",
+                                            f'Are you sure you want to delete sensor {self._sensor.short_name}?',
+                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        # if confirmed, remove sensor and redirect to configuration
+        if confirmation == QMessageBox.Yes:
+            self._db_session.delete(self._sensor)
+
+            self._return_to_configuration()
 
     def _edit_sensor(self):
         """ open sensor editing page """

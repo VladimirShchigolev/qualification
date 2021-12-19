@@ -48,7 +48,7 @@ class SensorIndexWidget(QWidget):
             QListWidgetItem(str(sensor), self._sensors_list)
 
         # show selected sensor on double click
-        self._sensors_list.itemDoubleClicked.connect(self._show_selected_sensor)
+        self._sensors_list.itemDoubleClicked.connect(self._show_list_item_sensor)
 
         # create buttons
         self._buttons_layout = QHBoxLayout()
@@ -56,6 +56,7 @@ class SensorIndexWidget(QWidget):
         self._new_button = QPushButton("New")
         self._new_button.clicked.connect(self._create_sensor)
         self._view_button = QPushButton("View")
+        self._view_button.clicked.connect(self._show_selected_sensor)
 
         self._buttons_layout.add_widget(self._new_button)
         self._buttons_layout.add_stretch(1)  # move view button to the right
@@ -80,8 +81,15 @@ class SensorIndexWidget(QWidget):
         for sensor in filtered_sensors:
             QListWidgetItem(str(sensor), self._sensors_list)
 
-    def _show_selected_sensor(self, list_item):
+    def _show_selected_sensor(self):
         """ open view page for the selected sensor """
+        # get selected items
+        selected_items = self._sensors_list.selected_items()
+        if len(selected_items):
+            self._show_list_item_sensor(selected_items[0])  # show the first and only item
+
+    def _show_list_item_sensor(self, list_item):
+        """ open view page for the selected/clicked sensor """
         sensor_short_name = list_item.data(0)  # get selected sensor short name
 
         # find sensor in DB

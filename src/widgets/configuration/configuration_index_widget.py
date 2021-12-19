@@ -49,7 +49,7 @@ class ConfigurationIndexWidget(QWidget):
             QListWidgetItem(str(configuration), self._configurations_list)
 
         # show selected configuration on double click
-        self._configurations_list.itemDoubleClicked.connect(self._show_selected_configuration)
+        self._configurations_list.itemDoubleClicked.connect(self._show_list_item_configuration)
 
         # create buttons
         self._buttons_layout = QHBoxLayout()
@@ -57,8 +57,9 @@ class ConfigurationIndexWidget(QWidget):
         self._new_button = QPushButton("New")
         self._load_button = QPushButton("Load")
         self._view_button = QPushButton("View")
+        self._view_button.clicked.connect(self._show_selected_configuration)
         self._close_button = QPushButton("Close")
-        #self._back_button.clicked.connect(self._index_configurations)
+        self._close_button.clicked.connect(self._close)
 
         self._buttons_layout.add_widget(self._new_button)
         self._buttons_layout.add_widget(self._load_button)
@@ -85,7 +86,15 @@ class ConfigurationIndexWidget(QWidget):
         for configuration in filtered_configurations:
             QListWidgetItem(str(configuration), self._configurations_list)
 
-    def _show_selected_configuration(self, list_item):
+    def _show_selected_configuration(self):
+        """ open view page for the selected configuration """
+        # get selected items
+        selected_items = self._configurations_list.selected_items()
+        if len(selected_items):
+            self._show_list_item_configuration(selected_items[0])  # show the first and only item
+
+    def _show_list_item_configuration(self, list_item):
+        """ open view page for the selected/clicked configuration """
         configuration_name = list_item.data(0)  # get selected configuration name
 
         # find configuration in DB
@@ -95,3 +104,6 @@ class ConfigurationIndexWidget(QWidget):
         if configuration is not None:  # if configuration found
             self.parent_widget().view_configuration(configuration)
 
+    def _close(self):
+        """ closes window """
+        self.parent_widget().close()
