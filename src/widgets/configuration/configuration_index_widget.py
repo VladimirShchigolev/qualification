@@ -22,6 +22,7 @@ class ConfigurationIndexWidget(QWidget):
         """ Initialize UI """
         # create a layout
         self._layout = QVBoxLayout(self)
+        self._layout.contents_margins = QMargins(15, 10, 15, 10)
 
         # create a title
         self._title = QLabel()

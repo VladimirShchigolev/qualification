@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 from src.widgets.configuration.configuration_index_widget import ConfigurationIndexWidget
 from src.widgets.configuration.configuration_view_widget import ConfigurationViewWidget
+from src.widgets.sensors.sensor_create_widget import SensorCreateWidget
 from src.widgets.sensors.sensor_view_widget import SensorViewWidget
 
 
@@ -54,10 +55,18 @@ class ConfigurationSettingsWindow(QWidget):
         self._widget = ConfigurationIndexWidget(self._db_session)
         self._layout.add_widget(self._widget)
 
+    def create_sensor(self, configuration):
+        """ Create new sensor """
+        self._clear_window()
+
+        # open sensor creation; set central widget to sensor create widget
+        self._widget = SensorCreateWidget(self._db_session, configuration)
+        self._layout.add_widget(self._widget)
+
     def view_sensor(self, sensor):
         """ Show the given sensor """
         self._clear_window()
 
-        # show selected sensor; set central widget to senosor view widget
+        # show selected sensor; set central widget to sensor view widget
         self._widget = SensorViewWidget(self._db_session, sensor)
         self._layout.add_widget(self._widget)

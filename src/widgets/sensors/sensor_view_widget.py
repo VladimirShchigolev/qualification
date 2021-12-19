@@ -16,6 +16,7 @@ class SensorViewWidget(QWidget):
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
+        """ Initialize UI """
         # create a layout
         self._layout = QVBoxLayout(self)
 
@@ -53,6 +54,7 @@ class SensorViewWidget(QWidget):
 
         # create buttons
         self._buttons_layout = QHBoxLayout()
+        self._buttons_layout.contents_margins = QMargins(10, 0, 10, 0)
 
         self._edit_button = QPushButton("Edit")
         self._back_button = QPushButton("Back To Configuration")
@@ -71,10 +73,11 @@ class SensorViewWidget(QWidget):
         self._form_layout.add_row("Physical Unit:", self._physical_unit_line)
         self._layout.add_layout(self._form_layout)
 
-        self._layout.add_stretch(1)
+        self._layout.add_stretch(1)  # move buttons to the bottom
 
         # add buttons
         self._layout.add_layout(self._buttons_layout)
 
     def _return_to_configuration(self):
+        """ open back the configuration creation/view/editing page """
         self.parent_widget().view_configuration(self._sensor.configuration)

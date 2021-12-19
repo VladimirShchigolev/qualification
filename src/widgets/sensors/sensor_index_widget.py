@@ -54,6 +54,7 @@ class SensorIndexWidget(QWidget):
         self._buttons_layout = QHBoxLayout()
 
         self._new_button = QPushButton("New")
+        self._new_button.clicked.connect(self._create_sensor)
         self._view_button = QPushButton("View")
 
         self._buttons_layout.add_widget(self._new_button)
@@ -80,6 +81,7 @@ class SensorIndexWidget(QWidget):
             QListWidgetItem(str(sensor), self._sensors_list)
 
     def _show_selected_sensor(self, list_item):
+        """ open view page for the selected sensor """
         sensor_short_name = list_item.data(0)  # get selected sensor short name
 
         # find sensor in DB
@@ -89,3 +91,6 @@ class SensorIndexWidget(QWidget):
         if sensor is not None:  # if sensor found
             self.parent_widget().parent_widget().view_sensor(sensor)
 
+    def _create_sensor(self):
+        """ open a sensor creating page """
+        self.parent_widget().parent_widget().create_sensor(self._configuration)

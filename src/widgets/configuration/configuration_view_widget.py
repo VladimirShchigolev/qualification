@@ -18,6 +18,7 @@ class ConfigurationViewWidget(QWidget):
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
+        """ Initialize UI """
         # create a layout
         self._layout = QVBoxLayout(self)
 
@@ -45,6 +46,7 @@ class ConfigurationViewWidget(QWidget):
 
         # create buttons
         self._buttons_layout = QHBoxLayout()
+        self._buttons_layout.contents_margins = QMargins(10, 0, 10, 0)
 
         self._load_button = QPushButton("Load")
         self._edit_button = QPushButton("Edit")
@@ -63,7 +65,7 @@ class ConfigurationViewWidget(QWidget):
         self._layout.add_layout(self._form_layout)
         self._layout.add_layout(self._sensors_and_tabs_layout)
 
-        self._layout.add_stretch(1)
+        self._layout.add_stretch(1)  # move buttons to the bottom
 
         # add buttons
         self._layout.add_layout(self._buttons_layout)
