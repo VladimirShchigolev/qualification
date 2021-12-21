@@ -51,7 +51,7 @@ class ConfigurationIndexWidget(QWidget):
         # show selected configuration on double click
         self._configurations_list.itemDoubleClicked.connect(self._show_list_item_configuration)
 
-        # create buttons
+        # section of buttons
         self._buttons_layout = QHBoxLayout()
 
         self._new_button = QPushButton("New")

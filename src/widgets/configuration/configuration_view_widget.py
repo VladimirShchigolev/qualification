@@ -48,7 +48,7 @@ class ConfigurationViewWidget(QWidget):
         self._tabs_widget = TabIndexWidget(self._db_session, self._configuration)
         self._sensors_and_tabs_layout.add_widget(self._tabs_widget)
 
-        # create buttons
+        # section of buttons
         self._buttons_layout = QHBoxLayout()
         self._buttons_layout.contents_margins = QMargins(10, 0, 10, 0)
 

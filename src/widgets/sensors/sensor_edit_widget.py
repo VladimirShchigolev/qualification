@@ -79,7 +79,7 @@ class SensorEditWidget(QWidget):
             QRegularExpressionValidator(QRegularExpression(r'.{0,10}'))
         )
 
-        # create buttons
+        # section of buttons
         self._buttons_layout = QHBoxLayout()
         self._buttons_layout.contents_margins = QMargins(10, 0, 10, 0)
 

@@ -7,6 +7,7 @@ from src.widgets.configuration.configuration_view_widget import ConfigurationVie
 from src.widgets.sensors.sensor_create_widget import SensorCreateWidget
 from src.widgets.sensors.sensor_edit_widget import SensorEditWidget
 from src.widgets.sensors.sensor_view_widget import SensorViewWidget
+from src.widgets.tabs.tab_view_widget import TabViewWidget
 
 
 class ConfigurationSettingsWindow(QWidget):
@@ -78,4 +79,12 @@ class ConfigurationSettingsWindow(QWidget):
 
         # open editing page; set central widget to sensor edit widget
         self._widget = SensorEditWidget(self._db_session, sensor)
+        self._layout.add_widget(self._widget)
+
+    def view_tab(self, tab):
+        """ Show the given tab """
+        self._clear_window()
+
+        # show selected tab; set central widget to tab view widget
+        self._widget = TabViewWidget(self._db_session, tab)
         self._layout.add_widget(self._widget)

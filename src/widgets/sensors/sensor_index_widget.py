@@ -50,7 +50,7 @@ class SensorIndexWidget(QWidget):
         # show selected sensor on double click
         self._sensors_list.itemDoubleClicked.connect(self._show_list_item_sensor)
 
-        # create buttons
+        # section of buttons
         self._buttons_layout = QHBoxLayout()
 
         self._new_button = QPushButton("New")

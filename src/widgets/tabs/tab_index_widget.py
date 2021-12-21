@@ -50,7 +50,7 @@ class TabIndexWidget(QWidget):
         # show selected tab on double click
         self._tabs_list.itemDoubleClicked.connect(self._show_list_item_tab)
 
-        # create buttons
+        # section of buttons
         self._buttons_layout = QHBoxLayout()
 
         self._new_button = QPushButton("New")
