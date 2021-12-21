@@ -110,5 +110,36 @@ class Tab(Base):
         """ Create a string value of a tab object """
         return self.name
 
+    @staticmethod
+    def validate(configuration, name, grid_width, grid_height, check_for_duplicates=True):
+        """ Check if given fields are valid """
+
+        if check_for_duplicates:
+            # check if a tab with such name exists in this configuration
+            exists = False
+            for tab in configuration.tabs:
+                if tab.name == name:
+                    exists = True
+                    break
+            if exists:
+                raise ValueError("A tab with such name already exists in this configuration")
+
+        # name length
+        if not 0 < len(name) < 30:
+            raise ValueError("Name should be 1 to 30 characters long!")
+
+        # grid width value
+        if not grid_width.isnumeric() or not 0 < int(grid_width) < 10:
+            raise ValueError("Column count should be an integer between 1 and 10!")
+
+        # grid height value
+        if not grid_height.isnumeric() or not 0 < int(grid_height) < 20:
+            raise ValueError("Row count should be an integer between 1 and 10!")
+
+        if int(grid_height) * int(grid_width) > 100:
+            raise ValueError("Cell count should be not more than 100!")
+
+        return True
+
 
 Configuration.tabs = relationship("Tab", order_by=Tab.name, back_populates="configuration")

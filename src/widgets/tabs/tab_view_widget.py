@@ -69,8 +69,8 @@ class TabViewWidget(QWidget):
         # add configuration data
         self._form_layout.add_row(self._title)
         self._form_layout.add_row("Name:", self._name_line)
-        self._form_layout.add_row("Grid Width:", self._grid_width_line)
-        self._form_layout.add_row("Grid Height:", self._grid_height_line)
+        self._form_layout.add_row("Column count:", self._grid_width_line)
+        self._form_layout.add_row("Row count:", self._grid_height_line)
         self._layout.add_layout(self._form_layout)
 
         self._layout.add_stretch(1)  # move buttons to the bottom
