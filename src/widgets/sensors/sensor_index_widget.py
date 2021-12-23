@@ -41,7 +41,8 @@ class SensorIndexWidget(QWidget):
         self._sensors_list.alternating_row_colors = True
 
         # get all configuration sensors from DB
-        all_sensors = self._configuration.sensors
+        all_sensors = self._db_session.query(Sensor).filter(Sensor.configuration == self._configuration)\
+            .order_by(Sensor.name).all()
 
         # add sensors to the list widget
         for sensor in all_sensors:

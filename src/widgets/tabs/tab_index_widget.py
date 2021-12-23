@@ -41,7 +41,7 @@ class TabIndexWidget(QWidget):
         self._tabs_list.alternating_row_colors = True
 
         # get all configuration tabs from DB
-        all_tabs = self._configuration.tabs
+        all_tabs = self._db_session.query(Tab).filter(Tab.configuration == self._configuration).order_by(Tab.name).all()
 
         # add tabs to the list widget
         for tab in all_tabs:
