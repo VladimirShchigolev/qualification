@@ -50,7 +50,8 @@ class Sensor(Base):
         return self.short_name
 
     @staticmethod
-    def validate(configuration, short_name, name, physical_value, physical_unit, check_for_duplicates=True):
+    def validate(configuration, short_name, name, physical_value, physical_unit, check_for_duplicates=True,
+                 db_session=None):
         """ Check if given fields are valid """
 
         # short name length
@@ -63,12 +64,9 @@ class Sensor(Base):
 
         if check_for_duplicates:
             # check if sensor with such short name exists in this configuration
-            exists = False
-            for sensor in configuration.sensors:
-                if sensor.short_name == short_name:
-                    exists = True
-                    break
-            if exists:
+            sensor = db_session.query(Sensor).filter(Sensor.configuration == configuration)\
+                .filter(Sensor.short_name == short_name).one_or_none()
+            if sensor:
                 raise ValueError("A sensor with such short name already exists in this configuration")
 
         # name length
@@ -111,17 +109,14 @@ class Tab(Base):
         return self.name
 
     @staticmethod
-    def validate(configuration, name, grid_width, grid_height, check_for_duplicates=True):
+    def validate(configuration, name, grid_width, grid_height, check_for_duplicates=True, db_session=None):
         """ Check if given fields are valid """
 
         if check_for_duplicates:
             # check if a tab with such name exists in this configuration
-            exists = False
-            for tab in configuration.tabs:
-                if tab.name == name:
-                    exists = True
-                    break
-            if exists:
+            tab = db_session.query(Tab).filter(Tab.configuration == configuration) \
+                .filter(Tab.name == name).one_or_none()
+            if tab:
                 raise ValueError("A tab with such name already exists in this configuration")
 
         # name length

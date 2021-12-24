@@ -145,7 +145,8 @@ class SensorEditWidget(QWidget):
         validation_passed = False
         try:
             validation_passed = Sensor.validate(self._sensor.configuration, short_name, name, physical_value,
-                                                physical_unit, check_for_duplicates=check_for_duplicates)
+                                                physical_unit, check_for_duplicates=check_for_duplicates,
+                                                db_session=self._db_session)
         except ValueError as error:
             QMessageBox.critical(self, "Error!", str(error), QMessageBox.Ok, QMessageBox.Ok)  # show error message
 

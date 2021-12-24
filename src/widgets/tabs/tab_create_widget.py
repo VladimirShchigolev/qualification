@@ -105,7 +105,6 @@ class TabCreateWidget(QWidget):
         else:  # otherwise set to previous value
             self._grid_height_line.current_text = str(current_height)
 
-
     def _save(self):
         """ Create a tab from data in the form """
 
@@ -117,7 +116,8 @@ class TabCreateWidget(QWidget):
         # check if data is valid
         validation_passed = False
         try:
-            validation_passed = Tab.validate(self._configuration, name, grid_width, grid_height)
+            validation_passed = Tab.validate(self._configuration, name, grid_width, grid_height,
+                                             db_session=self._db_session)
         except ValueError as error:
             QMessageBox.critical(self, "Error!", str(error), QMessageBox.Ok, QMessageBox.Ok)  # show error message
 

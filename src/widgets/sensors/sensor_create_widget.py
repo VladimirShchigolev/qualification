@@ -139,7 +139,8 @@ class SensorCreateWidget(QWidget):
         # check if data is valid
         validation_passed = False
         try:
-            validation_passed = Sensor.validate(self._configuration, short_name, name, physical_value, physical_unit)
+            validation_passed = Sensor.validate(self._configuration, short_name, name, physical_value, physical_unit,
+                                                db_session=self._db_session)
         except ValueError as error:
             QMessageBox.critical(self, "Error!", str(error), QMessageBox.Ok, QMessageBox.Ok)  # show error message
 
