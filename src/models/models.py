@@ -138,3 +138,29 @@ class Tab(Base):
 
 
 Configuration.tabs = relationship("Tab", order_by=Tab.name, back_populates="configuration")
+
+
+class Cell(Base):
+    """ Cell model """
+    __tablename__ = 'cell'
+
+    # table fields
+    id = Column(Integer, primary_key=True)
+    tab_id = Column(Integer, ForeignKey('tab.id'), nullable=False)
+    row = Column(Integer, nullable=False)
+    column = Column(Integer, nullable=False)
+    rowspan = Column(Integer, nullable=False, default=1)
+    colspan = Column(Integer, nullable=False, default=1)
+
+    tab = relationship("Tab", back_populates="cells")
+
+    def __repr__(self):
+        """ Create string representation of a cell object """
+        return f'Cell({self.row}, {self.column})'
+
+    def __str__(self):
+        """ Create a string value of a cell object """
+        return f'Cell({self.row}, {self.column})'
+
+
+Tab.cells = relationship("Cell", order_by=Cell.id, back_populates="tab")

@@ -7,7 +7,7 @@ from src.widgets.configuration.configuration_view_widget import ConfigurationVie
 from src.widgets.sensors.sensor_create_widget import SensorCreateWidget
 from src.widgets.sensors.sensor_edit_widget import SensorEditWidget
 from src.widgets.sensors.sensor_view_widget import SensorViewWidget
-from src.widgets.tabs.tab_create_widget import TabCreateWidget
+from src.widgets.tabs.tab_create_edit_widget import TabCreateEditWidget
 from src.widgets.tabs.tab_view_widget import TabViewWidget
 
 
@@ -87,7 +87,7 @@ class ConfigurationSettingsWindow(QWidget):
         self._clear_window()
 
         # open tab creation; set central widget to tab create widget
-        self._widget = TabCreateWidget(self._db_session, configuration)
+        self._widget = TabCreateEditWidget(self._db_session, configuration=configuration)
         self._layout.add_widget(self._widget)
 
     def view_tab(self, tab):

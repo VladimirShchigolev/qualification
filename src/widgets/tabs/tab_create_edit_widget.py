@@ -5,16 +5,27 @@ from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayo
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
-from src.models.models import Tab
+from src.models.models import Tab, Cell
+from src.widgets.cells.cell_management_widget import CellManagementWidget
 
 
-class TabCreateWidget(QWidget):
-    """ Widget for creating a tab """
+class TabCreateEditWidget(QWidget):
+    """ Widget for creating or editing a tab """
 
-    def __init__(self, db_session, configuration):
+    def __init__(self, db_session, configuration=None, tab=None):
         super().__init__()
         self._db_session = db_session
-        self._configuration = configuration
+
+        # define if tab is being created or edited
+        if tab:
+            self._tab = tab
+            self._configuration = configuration
+            self._edit_mode = True
+        else:
+            # create a new tab to edit it later
+            self._tab = Tab(configuration=configuration, name="", grid_width=2, grid_height=5)
+            self._configuration = configuration
+            self._edit_mode = False
 
         self._init_ui()  # initialize UI
 
@@ -29,26 +40,34 @@ class TabCreateWidget(QWidget):
 
         # create a title
         self._title = QLabel()
-        self._title.text = "Create Tab"
+        if self._edit_mode:
+            self._title.text = f'Edit tab {self._tab.name}'
+        else:
+            self._title.text = "Create Tab"
         self._title.font = QFont("Lato", 18)
         self._title.alignment = Qt.AlignCenter
         self._title.set_contents_margins(10, 10, 10, 20)
 
         # create name field display
         self._name_line = QLineEdit()
+        self._name_line.text = self._tab.name
 
         # set validation rules to 1-30 characters in length
         self._name_line.set_validator(
             QRegularExpressionValidator(QRegularExpression(r'.{1,30}'))
         )
 
+        # create a grid display
+        self._grid = CellManagementWidget(self._db_session, self._tab)
+
         # create grid width field display
         self._grid_width_line = QComboBox()
         self._grid_width_line.add_items(  # fill it with integers from 1 to 10
             [str(number) for number in range(1, 11)]
         )
-        self._grid_width_line.current_text = "2"
+        self._grid_width_line.current_text = str(self._tab.grid_width)
 
+        # change height combobox options on width change; resize grid on width change
         self._grid_width_line.currentTextChanged.connect(self._update_possible_heights)
 
         # create grid height field display
@@ -56,7 +75,11 @@ class TabCreateWidget(QWidget):
         self._grid_height_line.add_items(  # fill it with integers from 1 to 20
             [str(number) for number in range(1, 21)]
         )
-        self._grid_height_line.current_text = "5"
+        self._grid_height_line.current_text = str(self._tab.grid_height)
+        self._update_possible_heights()
+
+        # resize grid on height change
+        self._grid_height_line.currentTextChanged.connect(self._update_height)
 
         # section of buttons
         self._buttons_layout = QHBoxLayout()
@@ -78,6 +101,7 @@ class TabCreateWidget(QWidget):
         self._form_layout.add_row("Column count:", self._grid_width_line)
         self._form_layout.add_row("Row count:", self._grid_height_line)
         self._layout.add_layout(self._form_layout)
+        self._layout.add_widget(self._grid)
 
         self._layout.add_stretch(1)  # move buttons to the bottom
 
@@ -104,6 +128,39 @@ class TabCreateWidget(QWidget):
             self._grid_height_line.current_text = str(maximal_height)
         else:  # otherwise set to previous value
             self._grid_height_line.current_text = str(current_height)
+
+        # resize grid
+        self._resize(self._tab.grid_width, self._tab.grid_height, width, self._tab.grid_height)
+
+    def _update_height(self):
+        """ Resize the grid on height change """
+
+        height = int(self._grid_height_line.current_text)  # get chosen value
+
+        self._resize(self._tab.grid_width, self._tab.grid_height, self._tab.grid_width, height)  # resize the grid
+
+    def _resize(self, old_width, old_height, new_width, new_height):
+        """ Resize the grid
+        Resize the grid by deleting old cells if new height or new width are smaller than the old ones. Create new
+        cells if new width or new height are greater than the old ones.
+        """
+
+        # delete cells that are beyond new grid size
+        self._db_session.query(Cell).filter(Cell.column >= new_width).delete()
+        self._db_session.query(Cell).filter(Cell.row >= new_height).delete()
+
+        # create new cells to fill grid up to new size
+        for column in range(old_width, new_width):
+            for row in range(new_height):
+                Cell(tab=self._tab, row=row, column=column)
+
+        for row in range(old_height, new_height):
+            for column in range(min(new_width, old_width)):
+                Cell(tab=self._tab, row=row, column=column)
+
+        self._tab.grid_width = new_width
+        self._tab.grid_height = new_height
+        self._grid.update_grid()
 
     def _save(self):
         """ Create a tab from data in the form """
