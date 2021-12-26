@@ -45,7 +45,7 @@ class CellManagementWidget(QWidget):
 
     def _clear_grid(self):
         """ Delete all elements form grid layout. """
-        for i in reversed(range(self._grid_layout.count()-1)):
+        for i in range(self._grid_layout.count()-1, -1, -1):
             self._grid_layout.take_at(i).widget().delete_later()
 
     def _fill_grid(self):
@@ -54,11 +54,13 @@ class CellManagementWidget(QWidget):
         cells = self._db_session.query(Cell).filter(Cell.tab == self._tab)\
             .order_by(Cell.row).order_by(Cell.column).all()
 
+        print(cells)
+
         for cell in cells:
             cell_button = QPushButton()
             #cell_button.set_height(100)
             self._grid_layout.add_widget(cell_button, cell.row, cell.column, cell.rowspan, cell.colspan)
 
         for row in range(self._grid_layout.row_count()):
-            self._grid_layout.set_row_minimum_height(row, 100)
+            self._grid_layout.set_row_minimum_height(row, 10)
 

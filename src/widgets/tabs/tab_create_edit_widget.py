@@ -59,6 +59,8 @@ class TabCreateEditWidget(QWidget):
 
         # create a grid display
         self._grid = CellManagementWidget(self._db_session, self._tab)
+        if not self._edit_mode:
+            self._resize(0, 0, 2, 5)  # if a new tab is created, set grid to default
 
         # create grid width field display
         self._grid_width_line = QComboBox()
@@ -76,10 +78,10 @@ class TabCreateEditWidget(QWidget):
             [str(number) for number in range(1, 21)]
         )
         self._grid_height_line.current_text = str(self._tab.grid_height)
-        self._update_possible_heights()
-
         # resize grid on height change
         self._grid_height_line.currentTextChanged.connect(self._update_height)
+
+        self._update_possible_heights()  # set provided height according to the chosen width
 
         # section of buttons
         self._buttons_layout = QHBoxLayout()
@@ -103,8 +105,6 @@ class TabCreateEditWidget(QWidget):
         self._layout.add_layout(self._form_layout)
         self._layout.add_widget(self._grid)
 
-        self._layout.add_stretch(1)  # move buttons to the bottom
-
         # add buttons
         self._layout.add_layout(self._buttons_layout)
 
@@ -114,6 +114,9 @@ class TabCreateEditWidget(QWidget):
         width = int(self._grid_width_line.current_text)  # get chosen value
 
         current_height = int(self._grid_height_line.current_text)  # save current height
+
+        # remove onTextChange event handler while editing
+        self._grid_height_line.currentTextChanged.disconnect(self._update_height)
         self._grid_height_line.clear()  # clear all units
 
         maximal_height = min(20, 100 // width)  # maximal cell count per tab is 100 and maximal height is 20
@@ -128,6 +131,9 @@ class TabCreateEditWidget(QWidget):
             self._grid_height_line.current_text = str(maximal_height)
         else:  # otherwise set to previous value
             self._grid_height_line.current_text = str(current_height)
+
+        # add event handler back when editing is finished
+        self._grid_height_line.currentTextChanged.connect(self._update_height)
 
         # resize grid
         self._resize(self._tab.grid_width, self._tab.grid_height, width, self._tab.grid_height)
@@ -146,16 +152,21 @@ class TabCreateEditWidget(QWidget):
         """
 
         # delete cells that are beyond new grid size
-        self._db_session.query(Cell).filter(Cell.column >= new_width).delete()
-        self._db_session.query(Cell).filter(Cell.row >= new_height).delete()
+        self._db_session.query(Cell).filter(Cell.tab == self._tab)\
+            .filter(Cell.column >= new_width).delete(synchronize_session=False)
 
-        # create new cells to fill grid up to new size
+        self._db_session.query(Cell).filter(Cell.tab == self._tab)\
+            .filter(Cell.row >= new_height).delete(synchronize_session=False)
+
+        # create new cells to fill grid up to the new size
         for column in range(old_width, new_width):
             for row in range(new_height):
+                print(row, column)
                 Cell(tab=self._tab, row=row, column=column)
 
         for row in range(old_height, new_height):
             for column in range(min(new_width, old_width)):
+                print(row, column)
                 Cell(tab=self._tab, row=row, column=column)
 
         self._tab.grid_width = new_width
