@@ -158,7 +158,7 @@ class CellManagementWidget(QWidget):
                             spanning_rectangle &= grid[row][column]  # it should be marked as selected
                         else:  # if it's outside the spanning rectangle
                             spanning_rectangle &= not grid[row][column]  # it should be marked as not selected
-
+                # if contradiction was found, selection does not form a rectangle
                 return spanning_rectangle
 
             # fill the grid of atomic cells (1 x 1) - are these cells in selection or not

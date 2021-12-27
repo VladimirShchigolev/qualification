@@ -1,11 +1,11 @@
 from PySide6.QtCore import Qt, QRegularExpression, QMargins
 from PySide6.QtGui import QFont, QRegularExpressionValidator
 from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QScrollArea, QGridLayout, QSizePolicy, QVBoxLayout, \
-    QLineEdit, QComboBox, QListWidget, QListWidgetItem
+    QLineEdit, QComboBox, QListWidget, QListWidgetItem, QMessageBox
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
-from src.models.models import Cell, Sensor
+from src.models.models import Cell, Sensor, SensorCell
 
 
 class CellEditWidget(QWidget):
@@ -47,22 +47,127 @@ class CellEditWidget(QWidget):
             QRegularExpressionValidator(QRegularExpression(r'[A-Za-z0-9_]{1,10}'))
         )
 
-        # get all configuration sensors from DB
-        all_sensors = self._db_session.query(Sensor).filter(Sensor.configuration == self._configuration) \
-            .order_by(Sensor.short_name).all()
-
-        for sensor in all_sensors:
-            self._sensors_search.add_item(str(sensor))
+        self._sensors_search.currentIndexChanged.connect(self._add_sensor)
 
         # create added sensors' list
         self._sensors_list = QListWidget()
         self._sensors_list.alternating_row_colors = True
 
-        # add cell's sensors to the sensors' list
-        # for sensor in all_sensors:
-        #     QListWidgetItem(str(sensor), self._sensors_list)
+        self._update_lists()
+
+        # section of buttons
+        self._buttons_layout = QHBoxLayout()
+
+        self._split_button = QPushButton("Split")
+        self._split_button.clicked.connect(self._split_cell)
+        self._remove_button = QPushButton("Remove")
+        self._remove_button.clicked.connect(self._remove_sensor)
+
+        self._buttons_layout.add_widget(self._split_button)
+        self._buttons_layout.add_stretch(1)  # move view button to the right
+        self._buttons_layout.add_widget(self._remove_button)
 
         # add widgets to layout
         self._layout.add_widget(self._title_line)
         self._layout.add_widget(self._sensors_search)
         self._layout.add_widget(self._sensors_list)
+        self._layout.add_layout(self._buttons_layout)
+
+    def _update_lists(self):
+        """ Set cell list of sensors and search list of sensors according to DB data """
+        # clear all items
+        self._sensors_search.currentIndexChanged.disconnect(self._add_sensor)  # disable while editing search list
+        self._sensors_list.clear()
+        self._sensors_search.clear()
+
+        # get sensors that are assign to given cell
+        cell_sensors = self._db_session.query(Sensor).join(SensorCell).filter(SensorCell.cell == self._cell).all()
+
+        # add found sensors to the list
+        for sensor in cell_sensors:
+            QListWidgetItem(str(sensor), self._sensors_list)
+
+        # get sensors of the configuration that are not added to the cell
+        unassigned_sensors = self._db_session.query(Sensor).outerjoin(SensorCell) \
+            .filter(Sensor.configuration == self._configuration) \
+            .filter(SensorCell.cell != self._cell).all()
+
+        # add found sensors to the search drop list
+        for sensor in unassigned_sensors:
+            self._sensors_search.add_item(str(sensor))
+
+        self._sensors_search.currentIndexChanged.connect(self._add_sensor)  # enable when done editing search list
+
+    def _add_sensor(self):
+        """ Add the selected sensor to the cell """
+
+        sensor_short_name = self._sensors_search.current_text  # get the short name of the sensor
+
+        # find the sensor in the DB
+        sensor = self._db_session.query(Sensor).filter(Sensor.configuration == self._configuration) \
+            .filter(Sensor.short_name == sensor_short_name).one_or_none()
+
+        # if sensor not found
+        if not sensor:
+            # show error message
+            QMessageBox.critical(self, "Error!", "Sensor with such short name does not exist in this configuration!",
+                                 QMessageBox.Ok, QMessageBox.Ok)
+            return
+
+        # check if sensor is already assigned to the cell
+        assigned = self._db_session.query(SensorCell).filter(SensorCell.cell == self._cell) \
+            .filter(SensorCell.sensor == sensor).one_or_none()
+
+        if assigned:
+            # show error message
+            QMessageBox.critical(self, "Error!", "This sensor is already assigned to this cell!",
+                                 QMessageBox.Ok, QMessageBox.Ok)
+            return
+
+        # check if sensor type conforms already assigned sensors
+        assigned_sensor = self._db_session.query(Sensor) \
+            .join(SensorCell) \
+            .filter(SensorCell.cell == self._cell) \
+            .first()
+
+        # if there is a sensor assigned to the cell and its' type differs from the new sensor's type
+        if assigned_sensor and (assigned_sensor.physical_value != sensor.physical_value
+                                or assigned_sensor.physical_unit != sensor.physical_unit):
+            # show error message
+            QMessageBox.critical(self, "Error!", "Only sensors with the same physical value and units can be "
+                                                 "assigned to the same cell!",
+                                 QMessageBox.Ok, QMessageBox.Ok)
+            return
+
+        # create a SensorCell relationship object
+        SensorCell(sensor=sensor, cell=self._cell)
+
+        self._update_lists()
+
+    def _split_cell(self):
+        pass
+
+    def _remove_sensor(self):
+        """ Remove sensor from the cell """
+        # get selected items
+        selected_items = self._sensors_list.selected_items()
+
+        if len(selected_items):
+            sensor_short_name = selected_items[0].data(0)  # sensor to delete is the first and only selected item
+            # get the sensor that is being removed
+            sensor = self._db_session.query(Sensor) \
+                .filter(Sensor.configuration == self._configuration) \
+                .filter(Sensor.short_name == sensor_short_name) \
+                .one_or_none()
+
+            # find SensorCell object to remove
+            sensor_cell_to_delete = self._db_session.query(SensorCell) \
+                .filter(SensorCell.cell == self._cell) \
+                .filter(SensorCell.sensor == sensor) \
+                .one_or_none()
+
+            # remove SensorCell object - remove sensor assignment to the cell
+            if sensor_cell_to_delete:
+                self._db_session.delete(sensor_cell_to_delete)
+
+                self._update_lists()

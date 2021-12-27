@@ -27,6 +27,24 @@ class Configuration(Base):
         return self.name
 
 
+class SensorCell(Base):
+    """ Cell and Sensors NxM relationship model """
+    __tablename__ = 'sensor_cell'
+
+    # table fields
+    id = Column(Integer, primary_key=True)
+    sensor_id = Column(Integer, ForeignKey('sensor.id'), nullable=False)
+    cell_id = Column(Integer, ForeignKey('cell.id'), nullable=False)
+
+    def __repr__(self):
+        """ Create string representation of a CellSensor object """
+        return f'CellSensor({self.sensor_id}, {self.cell_id})'
+
+    def __str__(self):
+        """" Create string value of a CellSensor object """
+        return f'CellSensor({self.sensor_id}, {self.cell_id})'
+
+
 class Sensor(Base):
     """ Sensor model """
     __tablename__ = 'sensor'
@@ -40,6 +58,7 @@ class Sensor(Base):
     physical_unit = Column(String, nullable=False)
 
     configuration = relationship("Configuration", back_populates="sensors")
+    cell_sensors = relationship("SensorCell", back_populates="sensor")
 
     def __repr__(self):
         """ Create string representation of a sensor object """
@@ -153,6 +172,7 @@ class Cell(Base):
     colspan = Column(Integer, nullable=False, default=1)
 
     tab = relationship("Tab", back_populates="cells")
+    cell_sensors = relationship("SensorCell", back_populates="cell")
 
     def __repr__(self):
         """ Create string representation of a cell object """
@@ -164,3 +184,7 @@ class Cell(Base):
 
 
 Tab.cells = relationship("Cell", order_by=Cell.id, back_populates="tab")
+
+SensorCell.sensor = relationship("Sensor", back_populates="cell_sensors")
+SensorCell.cell = relationship("Cell", back_populates="cell_sensors")
+
