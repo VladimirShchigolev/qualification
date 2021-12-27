@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QScrollArea, QG
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
-from src.models.models import Cell
+from src.models.models import Cell, SensorCell
 from src.widgets.cells.cell_edit_widget import CellEditWidget
 
 
@@ -55,13 +55,13 @@ class CellManagementWidget(QWidget):
         """ Delete all elements form grid layout. """
         self._cells.clear()
         self._selected_cells = set()
-        for i in range(self._grid_layout.count()-1, -1, -1):
+        for i in range(self._grid_layout.count() - 1, -1, -1):
             self._grid_layout.take_at(i).widget().delete_later()
 
     def _fill_grid(self):
         """ Fill grid with cells """
 
-        cells = self._db_session.query(Cell).filter(Cell.tab == self._tab)\
+        cells = self._db_session.query(Cell).filter(Cell.tab == self._tab) \
             .order_by(Cell.row).order_by(Cell.column).all()
 
         print(cells)
@@ -86,6 +86,9 @@ class CellManagementWidget(QWidget):
         # set minimum height for rows
         for row in range(self._grid_layout.row_count()):
             self._grid_layout.set_row_minimum_height(row, 40)
+            self._grid_layout.set_row_stretch(row, 1)
+        for column in range(self._grid_layout.column_count()):
+            self._grid_layout.set_column_stretch(column, 1)
 
     def _press_cell_button(self, row, column):
         """ Manages cell selection when pressing cell buttons """
@@ -128,11 +131,6 @@ class CellManagementWidget(QWidget):
     def _merge_selected_cells(self):
         """ Merge selected cells if they are forming a rectangle """
 
-        if len(self._selected_cells) < 2:
-            # show error message
-            QMessageBox.critical(self, "Error!", "Can merge only two or more cells", QMessageBox.Ok, QMessageBox.Ok)
-            return
-
         def is_rectangular_selection(selected_cells, all_cells, grid_size):
             """ Check if selected cells form a rectangle """
             # create empty grid selection
@@ -152,7 +150,7 @@ class CellManagementWidget(QWidget):
                 for row in range(len(grid)):
                     for column in range(len(grid[0])):
                         # if cell is inside the spanning rectangle
-                        if upper_left_cell[0] <= row <= lower_right_cell[0]\
+                        if upper_left_cell[0] <= row <= lower_right_cell[0] \
                                 and upper_left_cell[1] <= column <= lower_right_cell[1]:
 
                             spanning_rectangle &= grid[row][column]  # it should be marked as selected
@@ -185,8 +183,66 @@ class CellManagementWidget(QWidget):
 
             return is_spanning_rectangle(grid, upper_left_cell, lower_right_cell)
 
-        if is_rectangular_selection(self._selected_cells, self._cells, (self._tab.grid_height, self._tab.grid_width)):
-            print("Yes")
-        else:
-            print("No")
+        if len(self._selected_cells) < 2:
+            # show error message
+            QMessageBox.critical(self, "Error!", "Can merge only two or more cells", QMessageBox.Ok, QMessageBox.Ok)
+            return
 
+        if is_rectangular_selection(self._selected_cells, self._cells, (self._tab.grid_height, self._tab.grid_width)):
+            self._merge_cell_rectangle()
+        else:
+            QMessageBox.critical(self, "Error!", "Can merge only cells that form a rectangle",
+                                 QMessageBox.Ok, QMessageBox.Ok)
+
+    def _merge_cell_rectangle(self):
+        """ Merge selected cells (that form a rectangle) into one cell """
+
+        selected_cells = sorted(self._selected_cells)
+
+        # select a cell to be the one after merging (main cell)
+        for cell_coordinates in selected_cells:
+            cell = self._cells[cell_coordinates][1]
+            # check if cell contains sensors
+            has_sensor_assigned = self._db_session.query(SensorCell) \
+                .filter(SensorCell.cell == cell) \
+                .first()
+
+            # set the most upper left cell with sensors as the main cell
+            if has_sensor_assigned:
+                main_cell = cell
+                break
+        else:  # if no such main cell is found, set left upper selected cell to be main cell
+            main_cell = self._cells[selected_cells[0]][1]
+
+        # calculate new (main) cell coordinates and span
+        upper_left_cell_coordinates = selected_cells[0]
+
+        # calculate lower right corner of the selection
+        lower_right_borders = []
+        for cell_coordinates in selected_cells:
+            cell = self._cells[cell_coordinates][1]
+            lower_right_borders.append((cell.row + cell.rowspan, cell.column + cell.colspan))
+        lower_right_borders.sort()
+
+        lower_right_border = lower_right_borders[-1]
+
+        rowspan = lower_right_border[0] - upper_left_cell_coordinates[0]
+        colspan = lower_right_border[1] - upper_left_cell_coordinates[1]
+
+        # set main cell to span over all selected cells
+        main_cell.row = upper_left_cell_coordinates[0]
+        main_cell.column = upper_left_cell_coordinates[1]
+        main_cell.rowspan = rowspan
+        main_cell.colspan = colspan
+
+        # delete all selected cells except the main cell
+        self._db_session.query(Cell) \
+            .filter(Cell.row >= main_cell.row) \
+            .filter(Cell.row < main_cell.row + main_cell.rowspan) \
+            .filter(Cell.column >= main_cell.column) \
+            .filter(Cell.column < main_cell.column + main_cell.colspan) \
+            .filter(Cell.id != main_cell.id) \
+            .delete()
+
+        self.update_grid()
+        self._cells[main_cell.row, main_cell.column][0].toggle()

@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt, QRegularExpression, QMargins
 from PySide6.QtGui import QFont, QRegularExpressionValidator
 from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QScrollArea, QGridLayout, QSizePolicy, QVBoxLayout, \
-    QLineEdit, QComboBox, QListWidget, QListWidgetItem, QMessageBox
+    QLineEdit, QComboBox, QListWidget, QListWidgetItem, QMessageBox, QToolTip
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
@@ -34,13 +34,12 @@ class CellEditWidget(QWidget):
         self._title_line.text = ""
         self._title_line.placeholder_text = "Title"
         self._title_line.read_only = True
+        self._title_line.tool_tip = "Title can be set manually only for group of sensors."
 
         # create sensor search combo box
         self._sensors_search = QComboBox()
         self._sensors_search.editable = True
         self._sensors_search.completer().case_sensitivity = Qt.CaseInsensitive  # set case insensitive completion
-        self._sensors_search.current_text = ""
-        self._sensors_search.placeholder_text = "Add Sensor"
 
         # set validation rules to upper and lower English letters, digits and underscore, 1-10 characters in length
         self._sensors_search.set_validator(
@@ -60,6 +59,9 @@ class CellEditWidget(QWidget):
 
         self._split_button = QPushButton("Split")
         self._split_button.clicked.connect(self._split_cell)
+        if self._cell.rowspan == 1 and self._cell.colspan == 1:
+            self._split_button.set_disabled(True)
+            self._split_button.tool_tip = "This cell cannot be split."
         self._remove_button = QPushButton("Remove")
         self._remove_button.clicked.connect(self._remove_sensor)
 
@@ -81,20 +83,29 @@ class CellEditWidget(QWidget):
         self._sensors_search.clear()
 
         # get sensors that are assign to given cell
-        cell_sensors = self._db_session.query(Sensor).join(SensorCell).filter(SensorCell.cell == self._cell).all()
+        cell_sensors = self._db_session.query(Sensor) \
+            .join(SensorCell) \
+            .filter(SensorCell.cell == self._cell) \
+            .order_by(Sensor.short_name) \
+            .all()
 
         # add found sensors to the list
         for sensor in cell_sensors:
             QListWidgetItem(str(sensor), self._sensors_list)
 
         # get sensors of the configuration that are not added to the cell
-        unassigned_sensors = self._db_session.query(Sensor).outerjoin(SensorCell) \
+        unassigned_sensors = self._db_session.query(Sensor) \
+            .outerjoin(SensorCell) \
             .filter(Sensor.configuration == self._configuration) \
-            .filter(SensorCell.cell != self._cell).all()
+            .filter(SensorCell.cell != self._cell)\
+            .order_by(Sensor.short_name) \
+            .all()
 
         # add found sensors to the search drop list
         for sensor in unassigned_sensors:
             self._sensors_search.add_item(str(sensor))
+
+        self._sensors_search.current_text = ""
 
         self._sensors_search.currentIndexChanged.connect(self._add_sensor)  # enable when done editing search list
 
