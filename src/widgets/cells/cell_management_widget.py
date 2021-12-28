@@ -246,3 +246,34 @@ class CellManagementWidget(QWidget):
 
         self.update_grid()
         self._cells[main_cell.row, main_cell.column][0].toggle()
+
+    def split_selected_cell(self):
+        """ Split selected cell into atomic (1x1) cells """
+
+        # check if only one cell is selected
+        if len(self._selected_cells) > 1:
+            # show error message
+            QMessageBox.critical(self, "Error!", "Can split only one cells!", QMessageBox.Ok, QMessageBox.Ok)
+            return
+
+        # check if selected cell can be split (is not atomic 1x1 cell)
+        cell = self._cells[next(iter(self._selected_cells))][1]  # get the only selected cell
+        if cell.rowspan == 1 and cell.colspan == 1:
+            # show error message
+            QMessageBox.critical(self, "Error!", "This cell cannot be split!", QMessageBox.Ok, QMessageBox.Ok)
+            return
+
+        # create all others atomic cells
+        for row in range(cell.row, cell.row + cell.rowspan):
+            for column in range(cell.column, cell.column + cell.colspan):
+                if row != cell.row or column != cell.column:
+                    Cell(tab=self._tab, row=row, column=column)  # create atomic cell
+
+        # set splitted cells (now - upper left cell) rowspan and colspan to 1
+        cell.rowspan = 1
+        cell.colspan = 1
+
+        # remove cell selection
+        self._cells[cell.row, cell.column][0].toggle()
+
+        self.update_grid()

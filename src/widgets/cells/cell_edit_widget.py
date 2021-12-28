@@ -156,7 +156,8 @@ class CellEditWidget(QWidget):
         self._update_lists()
 
     def _split_cell(self):
-        pass
+        """ Split selected cell into atomic (1x1) cells """
+        self.parent_widget().split_selected_cell()
 
     def _remove_sensor(self):
         """ Remove sensor from the cell """
