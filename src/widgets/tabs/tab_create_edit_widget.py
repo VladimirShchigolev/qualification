@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayo
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
-from src.models.models import Tab, Cell
+from src.models.models import Tab, Cell, SensorCell
 from src.widgets.cells.cell_grid_management_widget import CellGridManagementWidget
 
 
@@ -90,7 +90,7 @@ class TabCreateEditWidget(QWidget):
         self._save_button = QPushButton("Save")
         self._save_button.clicked.connect(self._save)
         self._cancel_button = QPushButton("Cancel")
-        self._cancel_button.clicked.connect(self._return_to_configuration)
+        self._cancel_button.clicked.connect(self._cancel)
 
         self._buttons_layout.add_widget(self._save_button)
         self._buttons_layout.add_stretch(1)  # move cancel button to the right
@@ -210,6 +210,17 @@ class TabCreateEditWidget(QWidget):
 
             self._return_to_configuration()  # redirect to configuration
 
+    def _cancel(self):
+        """ revert changes and open back the configuration creation/editing page """
+
+        # revert changes
+        if self._edit_mode:
+            pass
+        else:
+            self._db_session.delete(self._tab)  # remove created tab
+
+        self._return_to_configuration()
+
     def _return_to_configuration(self):
-        """ open back the configuration creation/view/editing page """
+        """ revert changes and open back the configuration creation/editing page """
         self.parent_widget().view_configuration(self._configuration)

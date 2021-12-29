@@ -33,8 +33,8 @@ class SensorCell(Base):
 
     # table fields
     id = Column(Integer, primary_key=True)
-    sensor_id = Column(Integer, ForeignKey('sensor.id'), nullable=False)
-    cell_id = Column(Integer, ForeignKey('cell.id'), nullable=False)
+    sensor_id = Column(Integer, ForeignKey('sensor.id', ondelete='CASCADE'), nullable=False)
+    cell_id = Column(Integer, ForeignKey('cell.id', ondelete='CASCADE'), nullable=False)
 
     def __repr__(self):
         """ Create string representation of a CellSensor object """
@@ -51,14 +51,14 @@ class Sensor(Base):
 
     # table fields
     id = Column(Integer, primary_key=True)
-    configuration_id = Column(Integer, ForeignKey('configuration.id'), nullable=False)
+    configuration_id = Column(Integer, ForeignKey('configuration.id', ondelete='CASCADE'), nullable=False)
     short_name = Column(String, nullable=False)
     name = Column(String, nullable=False)
     physical_value = Column(String, nullable=False)
     physical_unit = Column(String, nullable=False)
 
     configuration = relationship("Configuration", back_populates="sensors")
-    cell_sensors = relationship("SensorCell", back_populates="sensor")
+    cell_sensors = relationship("SensorCell", cascade="all,delete", back_populates="sensor")
 
     def __repr__(self):
         """ Create string representation of a sensor object """
@@ -103,7 +103,7 @@ class Sensor(Base):
         return True
 
 
-Configuration.sensors = relationship("Sensor", order_by=Sensor.short_name, back_populates="configuration")
+Configuration.sensors = relationship("Sensor", cascade="all,delete", order_by=Sensor.short_name, back_populates="configuration")
 
 
 class Tab(Base):
@@ -112,7 +112,7 @@ class Tab(Base):
 
     # table fields
     id = Column(Integer, primary_key=True)
-    configuration_id = Column(Integer, ForeignKey('configuration.id'), nullable=False)
+    configuration_id = Column(Integer, ForeignKey('configuration.id', ondelete='CASCADE'), nullable=False)
     name = Column(String, nullable=False)
     grid_width = Column(Integer, nullable=False, default=2)
     grid_height = Column(Integer, nullable=False, default=5)
@@ -156,7 +156,7 @@ class Tab(Base):
         return True
 
 
-Configuration.tabs = relationship("Tab", order_by=Tab.name, back_populates="configuration")
+Configuration.tabs = relationship("Tab", cascade="all,delete", order_by=Tab.name, back_populates="configuration")
 
 
 class Cell(Base):
@@ -165,14 +165,14 @@ class Cell(Base):
 
     # table fields
     id = Column(Integer, primary_key=True)
-    tab_id = Column(Integer, ForeignKey('tab.id'), nullable=False)
+    tab_id = Column(Integer, ForeignKey('tab.id', ondelete='CASCADE'), nullable=False)
     row = Column(Integer, nullable=False)
     column = Column(Integer, nullable=False)
     rowspan = Column(Integer, nullable=False, default=1)
     colspan = Column(Integer, nullable=False, default=1)
 
     tab = relationship("Tab", back_populates="cells")
-    cell_sensors = relationship("SensorCell", back_populates="cell")
+    cell_sensors = relationship("SensorCell", cascade="all,delete", back_populates="cell")
 
     def __repr__(self):
         """ Create string representation of a cell object """
@@ -183,7 +183,7 @@ class Cell(Base):
         return f'Cell({self.row}, {self.column})'
 
 
-Tab.cells = relationship("Cell", order_by=Cell.id, back_populates="tab")
+Tab.cells = relationship("Cell", cascade="all,delete", order_by=Cell.id, back_populates="tab")
 
 SensorCell.sensor = relationship("Sensor", back_populates="cell_sensors")
 SensorCell.cell = relationship("Cell", back_populates="cell_sensors")

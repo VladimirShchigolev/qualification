@@ -109,6 +109,7 @@ class CellGridManagementWidget(QWidget):
 
         elif len(self._selected_cells) == 1:  # if exactly one cell is selected
             # set a cell editing widget
+            row, column = next(iter(self._selected_cells))  # get selected cell's coordinates
             self._right_widget = CellEditWidget(self._db_session, self._cells[(row, column)][1])
         else:
             # set a cell merging widget
