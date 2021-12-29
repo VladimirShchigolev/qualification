@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 
 
@@ -14,7 +15,8 @@ def create_tables(database):
                                              show_unknown_sensors integer NOT NULL DEFAULT 0,
                                              show_model integer NOT NULL DEFAULT 0,
                                              model_chamber_text text DEFAULT NULL,
-                                             model_control_text text DEFAULT NULL
+                                             model_control_text text DEFAULT NULL,
+                                             active integer NOT NULL DEFAULT 0
                                          );"""
 
     sql_create_sensor_table = """CREATE TABLE IF NOT EXISTS sensor (
@@ -44,6 +46,7 @@ def create_tables(database):
                                    column integer NOT NULL,
                                    rowspan integer NOT NULL DEFAULT 1,
                                    colspan integer NOT NULL DEFAULT 1,
+                                   title text NULL,
                                    FOREIGN KEY (tab_id) REFERENCES tab (id) ON DELETE CASCADE
                                );"""
 
@@ -58,7 +61,7 @@ def create_tables(database):
     sql_create_address_table = """CREATE TABLE IF NOT EXISTS address (
                                       id integer PRIMARY KEY,
                                       ip_port text NOT NULL UNIQUE,
-                                      use_datetime real NOT NULL
+                                      use_datetime text NOT NULL
                                   );"""
 
     # execute SQL codes for table creation
@@ -89,7 +92,7 @@ def insert_default(database):
     if len(rows) == 0:  # Default configuration doesn't exist
         # insert default configuration and unknown sensor tab for the configuration
         cursor.execute("""INSERT INTO configuration
-                          VALUES (NULL, 'Default', 1, 0, NULL, NULL);""")
+                          VALUES (NULL, 'Default', 1, 0, NULL, NULL, 1);""")
 
         configuration_id = cursor.lastrowid  # id of the default configuration
         cursor.execute("""INSERT INTO tab
@@ -108,7 +111,7 @@ def insert_default(database):
 
     if len(rows) == 0:  # Default address doesn't exist
         # insert default IP address and port into address table
-        cursor.execute("INSERT INTO address VALUES (NULL, '127.0.0.1:64363', julianday('now'))")
+        cursor.execute("INSERT INTO address VALUES (NULL, ?, ?)", ('127.0.0.1:64363', datetime.datetime.now()))
 
     database.commit()
 
