@@ -105,6 +105,7 @@ class CellEditWidget(QWidget):
         for sensor in unassigned_sensors:
             self._sensors_search.add_item(str(sensor))
 
+        self._sensors_search.current_index = -1
         self._sensors_search.current_text = ""
 
         self._sensors_search.currentIndexChanged.connect(self._add_sensor)  # enable when done editing search list
@@ -123,6 +124,8 @@ class CellEditWidget(QWidget):
             # show error message
             QMessageBox.critical(self, "Error!", "Sensor with such short name does not exist in this configuration!",
                                  QMessageBox.Ok, QMessageBox.Ok)
+
+            self._update_lists()  # clear changes to search combobox
             return
 
         # check if sensor is already assigned to the cell
@@ -148,10 +151,9 @@ class CellEditWidget(QWidget):
             QMessageBox.critical(self, "Error!", "Only sensors with the same physical value and units can be "
                                                  "assigned to the same cell!",
                                  QMessageBox.Ok, QMessageBox.Ok)
-            return
-
-        # create a SensorCell relationship object
-        SensorCell(sensor=sensor, cell=self._cell)
+        else:
+            # create a SensorCell relationship object
+            SensorCell(sensor=sensor, cell=self._cell)
 
         self._update_lists()
 
