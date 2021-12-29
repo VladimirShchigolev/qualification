@@ -86,7 +86,7 @@ class ConfigurationSettingsWindow(QWidget):
         """ open tab creation page """
         self._clear_window()
 
-        # open tab creation; set central widget to tab create widget
+        # open tab creation; set central widget to tab create/edit widget in create mode
         self._widget = TabCreateEditWidget(self._db_session, configuration=configuration)
         self._layout.add_widget(self._widget)
 
@@ -96,6 +96,14 @@ class ConfigurationSettingsWindow(QWidget):
 
         # show selected tab; set central widget to tab view widget
         self._widget = TabViewWidget(self._db_session, tab)
+        self._layout.add_widget(self._widget)
+
+    def edit_tab(self, tab):
+        """ open tab creation page """
+        self._clear_window()
+
+        # open tab editing; set central widget to tab create/edit widget in edit mode
+        self._widget = TabCreateEditWidget(self._db_session, tab=tab)
         self._layout.add_widget(self._widget)
 
 

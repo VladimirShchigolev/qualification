@@ -17,6 +17,7 @@ class Configuration(Base):
     show_model = Column(Boolean, nullable=False)
     model_chamber_text = Column(String)
     model_control_text = Column(String)
+    active = Column(Boolean, nullable=False, default=False)
 
     def __repr__(self):
         """ Create string representation of a configuration object """
@@ -74,7 +75,7 @@ class Sensor(Base):
         """ Check if given fields are valid """
 
         # short name length
-        if not 0 < len(short_name) < 10:
+        if not 1 <= len(short_name) <= 10:
             raise ValueError("Short name should be 1 to 10 characters long!")
 
         # short name characters
@@ -89,15 +90,15 @@ class Sensor(Base):
                 raise ValueError("A sensor with such short name already exists in this configuration")
 
         # name length
-        if not 0 < len(name) < 30:
+        if not 1 <= len(name) <= 30:
             raise ValueError("Name should be 1 to 30 characters long!")
 
         # physical value length
-        if not 0 < len(physical_value) < 40:
+        if not 1 <= len(physical_value) <= 40:
             raise ValueError("Physical value should be 1 to 40 characters long!")
 
         # physical unit length
-        if not 0 < len(physical_unit) < 10:
+        if not 1 <= len(physical_unit) <= 10:
             raise ValueError("Physical unit should be 1 to 10 characters long!")
 
         return True
@@ -139,15 +140,15 @@ class Tab(Base):
                 raise ValueError("A tab with such name already exists in this configuration")
 
         # name length
-        if not 0 < len(name) < 30:
+        if not 1 <= len(name) <= 30:
             raise ValueError("Name should be 1 to 30 characters long!")
 
         # grid width value
-        if not grid_width.isnumeric() or not 0 < int(grid_width) < 10:
+        if not 1 <= grid_width <= 10:
             raise ValueError("Column count should be an integer between 1 and 10!")
 
         # grid height value
-        if not grid_height.isnumeric() or not 0 < int(grid_height) < 20:
+        if not 1 <= grid_height <= 20:
             raise ValueError("Row count should be an integer between 1 and 10!")
 
         if int(grid_height) * int(grid_width) > 100:
@@ -170,6 +171,7 @@ class Cell(Base):
     column = Column(Integer, nullable=False)
     rowspan = Column(Integer, nullable=False, default=1)
     colspan = Column(Integer, nullable=False, default=1)
+    title = Column(String, nullable=True)
 
     tab = relationship("Tab", back_populates="cells")
     cell_sensors = relationship("SensorCell", cascade="all,delete", back_populates="cell")

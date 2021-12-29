@@ -19,8 +19,9 @@ class TabCreateEditWidget(QWidget):
         # define if tab is being created or edited
         if tab:
             self._tab = tab
-            self._configuration = configuration
+            self._configuration = tab.configuration
             self._edit_mode = True
+            self._create_backup()
         else:
             # create a new tab to edit it later
             self._tab = Tab(configuration=configuration, name="", grid_width=2, grid_height=5)
@@ -135,6 +136,7 @@ class TabCreateEditWidget(QWidget):
         # add event handler back when editing is finished
         self._grid_height_line.currentTextChanged.connect(self._update_height)
 
+        print(type(self._tab.grid_width), type(self._tab.grid_height))
         # resize grid
         self._resize(self._tab.grid_width, self._tab.grid_height, width, self._tab.grid_height)
 
@@ -173,13 +175,42 @@ class TabCreateEditWidget(QWidget):
         self._tab.grid_height = new_height
         self._grid.update_grid()
 
+    def _create_backup(self):
+        """ Create a backup for reverting changes"""
+        # create a backup tab
+        self._backup_tab = Tab(configuration=self._configuration, name="", grid_width=self._tab.grid_width,
+                               grid_height=self._tab.grid_height)
+
+        # get all the cells of the tab and create their backups
+        cells = self._db_session.query(Cell).filter(Cell.tab == self._tab).all()
+        for cell in cells:
+            Cell(tab=self._backup_tab, row=cell.row, column=cell.column, rowspan=cell.rowspan, colspan=cell.colspan,
+                 title=cell.title)
+
+        # get all the sensor-cell records and create their backups
+        sensor_cells = self._db_session.query(SensorCell) \
+            .join(Cell) \
+            .filter(Cell.tab == self._tab) \
+            .all()
+
+        for sensor_cell in sensor_cells:
+            # find the backup of the cell
+            cell = self._db_session.query(Cell)\
+                .filter(Cell.tab == self._backup_tab)\
+                .filter(Cell.row == sensor_cell.cell.row)\
+                .filter(Cell.column == sensor_cell.cell.column)\
+                .one_or_none()
+
+            if cell:
+                SensorCell(cell=cell, sensor=sensor_cell.sensor)
+
     def _save(self):
         """ Create a tab from data in the form """
 
         # get data from the form
         name = self._name_line.text
-        grid_width = self._grid_width_line.current_text
-        grid_height = self._grid_height_line.current_text
+        grid_width = int(self._grid_width_line.current_text)
+        grid_height = int(self._grid_height_line.current_text)
 
         # determine if check for duplicates is needed
         check_for_duplicates = name != self._tab.name  # needed only when tab name gets changed
@@ -199,6 +230,10 @@ class TabCreateEditWidget(QWidget):
             self._tab.grid_width = grid_width
             self._tab.grid_height = grid_height
 
+            # remove the backup tab if in editing mode
+            if self._edit_mode:
+                self._db_session.delete(self._backup_tab)
+
             # set message according to selected mode (create or edit)
             if self._edit_mode:
                 message = f'Tab {self._tab.name} updated successfully!'
@@ -215,7 +250,9 @@ class TabCreateEditWidget(QWidget):
 
         # revert changes
         if self._edit_mode:
-            pass
+            tab_name = self._tab.name
+            self._db_session.delete(self._tab)
+            self._backup_tab.name = tab_name
         else:
             self._db_session.delete(self._tab)  # remove created tab
 

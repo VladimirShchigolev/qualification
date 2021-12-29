@@ -238,6 +238,7 @@ class CellGridManagementWidget(QWidget):
 
         # delete all selected cells except the main cell
         self._db_session.query(Cell) \
+            .filter(Cell.tab == self._tab) \
             .filter(Cell.row >= main_cell.row) \
             .filter(Cell.row < main_cell.row + main_cell.rowspan) \
             .filter(Cell.column >= main_cell.column) \
