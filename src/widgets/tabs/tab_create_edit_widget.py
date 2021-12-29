@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayo
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
 from src.models.models import Tab, Cell
-from src.widgets.cells.cell_management_widget import CellManagementWidget
+from src.widgets.cells.cell_grid_management_widget import CellGridManagementWidget
 
 
 class TabCreateEditWidget(QWidget):
@@ -58,7 +58,7 @@ class TabCreateEditWidget(QWidget):
         )
 
         # create a grid display
-        self._grid = CellManagementWidget(self._db_session, self._tab)
+        self._grid = CellGridManagementWidget(self._db_session, self._tab)
         if not self._edit_mode:
             self._resize(0, 0, 2, 5)  # if a new tab is created, set grid to default
 
@@ -123,7 +123,7 @@ class TabCreateEditWidget(QWidget):
 
         # add height values for chosen width
         self._grid_height_line.add_items(
-            [str(possible_height) for possible_height in range(1, maximal_height+1)]
+            [str(possible_height) for possible_height in range(1, maximal_height + 1)]
         )
 
         # if current height is no longer possible, change it to maximal possible
@@ -152,10 +152,10 @@ class TabCreateEditWidget(QWidget):
         """
 
         # delete cells that are beyond new grid size
-        self._db_session.query(Cell).filter(Cell.tab == self._tab)\
+        self._db_session.query(Cell).filter(Cell.tab == self._tab) \
             .filter(Cell.column >= new_width).delete(synchronize_session=False)
 
-        self._db_session.query(Cell).filter(Cell.tab == self._tab)\
+        self._db_session.query(Cell).filter(Cell.tab == self._tab) \
             .filter(Cell.row >= new_height).delete(synchronize_session=False)
 
         # create new cells to fill grid up to the new size
@@ -181,19 +181,31 @@ class TabCreateEditWidget(QWidget):
         grid_width = self._grid_width_line.current_text
         grid_height = self._grid_height_line.current_text
 
+        # determine if check for duplicates is needed
+        check_for_duplicates = name != self._tab.name  # needed only when tab name gets changed
+
         # check if data is valid
         validation_passed = False
         try:
             validation_passed = Tab.validate(self._configuration, name, grid_width, grid_height,
-                                             db_session=self._db_session)
+                                             db_session=self._db_session, check_for_duplicates=check_for_duplicates)
         except ValueError as error:
             QMessageBox.critical(self, "Error!", str(error), QMessageBox.Ok, QMessageBox.Ok)  # show error message
 
         if validation_passed:  # if data is valid
-            # create a new tab object
-            tab = Tab(configuration=self._configuration, name=name, grid_width=grid_width, grid_height=grid_height)
+            # set data to created/edited tab object
+            self._tab.configuration = self._configuration
+            self._tab.name = name
+            self._tab.grid_width = grid_width
+            self._tab.grid_height = grid_height
 
-            QMessageBox.information(self, "Success!", f'Tab {tab.name} created successfully!',
+            # set message according to selected mode (create or edit)
+            if self._edit_mode:
+                message = f'Tab {self._tab.name} updated successfully!'
+            else:
+                message = f'Tab {self._tab.name} created successfully!'
+
+            QMessageBox.information(self, "Success!", message,
                                     QMessageBox.Ok, QMessageBox.Ok)  # show success message
 
             self._return_to_configuration()  # redirect to configuration

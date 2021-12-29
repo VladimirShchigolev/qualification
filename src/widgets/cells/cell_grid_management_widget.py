@@ -6,9 +6,9 @@ from src.models.models import Cell, SensorCell
 from src.widgets.cells.cell_edit_widget import CellEditWidget
 
 
-class CellManagementWidget(QWidget):
+class CellGridManagementWidget(QWidget):
     """ Widget responsible for showing all cells belonging to a given tab.
-    Allows selecting cells and editing them.
+    Allows selecting cells and editing them - merging and splitting cells, adding sensors to the cells.
     """
 
     def __init__(self, db_session, tab):
@@ -52,7 +52,7 @@ class CellManagementWidget(QWidget):
         self._fill_grid()  # and fill it according to DB session data
 
     def _clear_grid(self):
-        """ Delete all elements form grid layout. """
+        """ Delete all elements from grid layout. """
         self._cells.clear()
         self._selected_cells = set()
         for i in range(self._grid_layout.count() - 1, -1, -1):

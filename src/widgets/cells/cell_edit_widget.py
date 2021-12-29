@@ -1,11 +1,11 @@
 from PySide6.QtCore import Qt, QRegularExpression, QMargins
-from PySide6.QtGui import QFont, QRegularExpressionValidator
-from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QScrollArea, QGridLayout, QSizePolicy, QVBoxLayout, \
-    QLineEdit, QComboBox, QListWidget, QListWidgetItem, QMessageBox, QToolTip
+from PySide6.QtGui import QRegularExpressionValidator
+from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout, \
+    QLineEdit, QComboBox, QListWidget, QListWidgetItem, QMessageBox
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
-from src.models.models import Cell, Sensor, SensorCell
+from src.models.models import Sensor, SensorCell
 
 
 class CellEditWidget(QWidget):
@@ -57,12 +57,12 @@ class CellEditWidget(QWidget):
         # section of buttons
         self._buttons_layout = QHBoxLayout()
 
-        self._split_button = QPushButton("Split")
+        self._split_button = QPushButton("Split Cell")
         self._split_button.clicked.connect(self._split_cell)
         if self._cell.rowspan == 1 and self._cell.colspan == 1:
             self._split_button.set_disabled(True)
             self._split_button.tool_tip = "This cell cannot be split."
-        self._remove_button = QPushButton("Remove")
+        self._remove_button = QPushButton("Remove Sensor")
         self._remove_button.clicked.connect(self._remove_sensor)
 
         self._buttons_layout.add_widget(self._split_button)
@@ -82,7 +82,7 @@ class CellEditWidget(QWidget):
         self._sensors_list.clear()
         self._sensors_search.clear()
 
-        # get sensors that are assign to given cell
+        # get sensors that are assigned to given cell
         cell_sensors = self._db_session.query(Sensor) \
             .join(SensorCell) \
             .filter(SensorCell.cell == self._cell) \
@@ -91,13 +91,16 @@ class CellEditWidget(QWidget):
 
         # add found sensors to the list
         for sensor in cell_sensors:
-            QListWidgetItem(str(sensor), self._sensors_list)
+            sensor_item = QListWidgetItem(str(sensor), self._sensors_list)
+            sensor_item.set_tool_tip(f"Short Name: {sensor.short_name}\nName: {sensor.name}\n"
+                                     f"Physical Value: {sensor.physical_value}\nPhysical Unit: {sensor.physical_unit}"
+                                     )
 
         # get sensors of the configuration that are not added to the cell
         unassigned_sensors = self._db_session.query(Sensor) \
             .outerjoin(SensorCell) \
             .filter(Sensor.configuration == self._configuration) \
-            .filter(SensorCell.cell != self._cell)\
+            .filter(SensorCell.cell != self._cell) \
             .order_by(Sensor.short_name) \
             .all()
 

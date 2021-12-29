@@ -5,6 +5,8 @@ from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayo
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
+from src.widgets.cells.cell_grid_view_widget import CellGridViewWidget
+
 
 class TabViewWidget(QWidget):
     """ Widget for viewing a certain tab """
@@ -47,6 +49,9 @@ class TabViewWidget(QWidget):
         self._grid_height_line.text = str(self._tab.grid_height)
         self._grid_height_line.read_only = True
 
+        # create grid display
+        self._grid = CellGridViewWidget(self._db_session, self._tab)
+
         # section of buttons
         self._buttons_layout = QHBoxLayout()
         self._buttons_layout.contents_margins = QMargins(10, 0, 10, 0)
@@ -72,8 +77,7 @@ class TabViewWidget(QWidget):
         self._form_layout.add_row("Column count:", self._grid_width_line)
         self._form_layout.add_row("Row count:", self._grid_height_line)
         self._layout.add_layout(self._form_layout)
-
-        self._layout.add_stretch(1)  # move buttons to the bottom
+        self._layout.add_widget(self._grid)
 
         # add buttons
         self._layout.add_layout(self._buttons_layout)
