@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt, QMargins, QRegularExpression
 from PySide6.QtGui import QFont, QRegularExpressionValidator
 from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, QVBoxLayout, \
-    QComboBox, QMessageBox
+    QComboBox, QMessageBox, QCheckBox, QSizePolicy
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
@@ -39,6 +39,7 @@ class ConfigurationCreateEditWidget(QWidget):
 
         self._form_layout = QFormLayout()
         self._form_layout.horizontal_spacing = 20
+        self._form_layout.vertical_spacing = 20
         self._form_layout.contents_margins = QMargins(10, 0, 10, 0)
 
         # create a title
@@ -58,6 +59,9 @@ class ConfigurationCreateEditWidget(QWidget):
         self._name_line.set_validator(
             QRegularExpressionValidator(QRegularExpression(r'.{1,30}'))
         )
+
+        self._include_unknown_sensor_tab = QCheckBox()
+        self._include_unknown_sensor_tab.checked = self._configuration.show_unknown_sensors
 
         # create sensors and tabs display
         if self._edit_mode and not self._returned_to_creation:
@@ -89,6 +93,7 @@ class ConfigurationCreateEditWidget(QWidget):
         # add widgets to layout
         self._form_layout.add_row(self._title)
         self._form_layout.add_row("Name:", self._name_line)
+        self._form_layout.add_row("Include Unknown sensors tab:", self._include_unknown_sensor_tab)
         self._layout.add_layout(self._form_layout)
         self._layout.add_layout(self._sensors_and_tabs_layout)
 
@@ -100,6 +105,7 @@ class ConfigurationCreateEditWidget(QWidget):
 
         # get data from the form
         name = self._name_line.text
+        include_unknown_sensor_tab = self._include_unknown_sensor_tab.checked
 
         # determine if check for duplicates is needed
         check_for_duplicates = name != self._configuration.name  # needed only when configuration name gets changed
@@ -115,6 +121,7 @@ class ConfigurationCreateEditWidget(QWidget):
         if validation_passed:  # if data is valid
             # set data to created/edited configuration object
             self._configuration.name = name
+            self._configuration.show_unknown_sensors = include_unknown_sensor_tab
 
             # set message according to selected mode (create or edit)
             if self._edit_mode:
