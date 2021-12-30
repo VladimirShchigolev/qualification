@@ -31,10 +31,25 @@ class CellEditWidget(QWidget):
 
         # create title field display
         self._title_line = QLineEdit()
-        self._title_line.text = ""
+        self._title_line.textChanged.connect(self._update_title)
+        self._title_line.text = self._cell.title
         self._title_line.placeholder_text = "Title"
-        self._title_line.read_only = True
+
+        # get sensors that are assigned to the cell
+        cell_sensors = self._db_session.query(Sensor) \
+            .join(SensorCell) \
+            .filter(SensorCell.cell == self._cell) \
+            .order_by(Sensor.short_name) \
+            .all()
+
+        self._title_line.read_only = len(cell_sensors) <= 1  # make title editable if cell represents a sensor group
+
         self._title_line.tool_tip = "Title can be set manually only for group of sensors."
+
+        # set validation rules to 1-30 characters in length
+        self._title_line.set_validator(
+            QRegularExpressionValidator(QRegularExpression(r'.{1,50}'))
+        )
 
         # create sensor search combo box
         self._sensors_search = QComboBox()
@@ -82,7 +97,7 @@ class CellEditWidget(QWidget):
         self._sensors_list.clear()
         self._sensors_search.clear()
 
-        # get sensors that are assigned to given cell
+        # get sensors that are assigned to the cell
         cell_sensors = self._db_session.query(Sensor) \
             .join(SensorCell) \
             .filter(SensorCell.cell == self._cell) \
@@ -104,6 +119,8 @@ class CellEditWidget(QWidget):
             .order_by(Sensor.short_name) \
             .all()
 
+        print(unassigned_sensors)
+
         # add found sensors to the search drop list
         for sensor in unassigned_sensors:
             self._sensors_search.add_item(str(sensor))
@@ -112,6 +129,12 @@ class CellEditWidget(QWidget):
         self._sensors_search.current_text = ""
 
         self._sensors_search.currentIndexChanged.connect(self._add_sensor)  # enable when done editing search list
+
+    def _update_title(self):
+        """ Update cell title in grid representation according to set cell title """
+        if self._title_line.text != self._cell.title:
+            self._cell.title = self._title_line.text
+            self.parent_widget().update_cell_title(self._cell)
 
     def _add_sensor(self):
         """ Add the selected sensor to the cell """
@@ -158,6 +181,13 @@ class CellEditWidget(QWidget):
             # create a SensorCell relationship object
             SensorCell(sensor=sensor, cell=self._cell)
 
+            # set cell title
+            if assigned_sensor:  # set title for sensor group
+                self._title_line.text = f"{sensor.physical_value} Group"
+                self._title_line.read_only = False  # allow title editing
+            else:  # set title for single sensor
+                self._title_line.text = sensor.name
+
         self._update_lists()
 
     def _split_cell(self):
@@ -186,5 +216,20 @@ class CellEditWidget(QWidget):
             # remove SensorCell object - remove sensor assignment to the cell
             if sensor_cell_to_delete:
                 self._db_session.delete(sensor_cell_to_delete)
+
+                # get sensors that are assigned to the cell
+                cell_sensors = self._db_session.query(Sensor) \
+                    .join(SensorCell) \
+                    .filter(SensorCell.cell == self._cell) \
+                    .order_by(Sensor.short_name) \
+                    .all()
+
+                # if cell represents a single sensor
+                if len(cell_sensors) == 1:
+                    # set cell title to sensor name
+                    self._title_line.text = cell_sensors[0].name
+                    self._title_line.read_only = True
+                elif len(cell_sensors) == 0:  # if cell has no sensors
+                    self._title_line.text = None  # remove cell title
 
                 self._update_lists()

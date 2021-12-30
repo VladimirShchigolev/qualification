@@ -68,6 +68,7 @@ class CellGridManagementWidget(QWidget):
 
         for cell in cells:
             cell_button = QPushButton()
+            cell_button.text = cell.title
             cell_button.checkable = True
             self._cells[(cell.row, cell.column)] = (cell_button, cell)
 
@@ -279,3 +280,7 @@ class CellGridManagementWidget(QWidget):
         self._cells[cell.row, cell.column][0].toggle()
 
         self.update_grid()
+
+    def update_cell_title(self, cell):
+        """ Update cell title in it's grid representation """
+        self._cells[cell.row, cell.column][0].text = cell.title

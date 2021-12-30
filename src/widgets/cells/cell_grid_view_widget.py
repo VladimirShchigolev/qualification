@@ -66,6 +66,7 @@ class CellGridViewWidget(QWidget):
 
         for cell in cells:
             cell_button = QPushButton()
+            cell_button.text = cell.title
             self._cells[(cell.row, cell.column)] = (cell_button, cell)
 
             cell_button.size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)

@@ -29,7 +29,7 @@ class CellViewWidget(QWidget):
 
         # create title field display
         self._title_line = QLineEdit()
-        self._title_line.text = ""
+        self._title_line.text = self._cell.title
         self._title_line.placeholder_text = "Title"
         self._title_line.read_only = True
         self._title_line.tool_tip = "Title can be set manually only for group of sensors."
