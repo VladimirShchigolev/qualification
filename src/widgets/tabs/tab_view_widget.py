@@ -11,10 +11,12 @@ from src.widgets.cells.cell_grid_view_widget import CellGridViewWidget
 class TabViewWidget(QWidget):
     """ Widget for viewing a certain tab """
 
-    def __init__(self, db_session, tab):
+    def __init__(self, db_session, tab, configuration_page="view"):
         super().__init__()
         self._db_session = db_session
         self._tab = tab
+
+        self._configuration_page = configuration_page  # from what page this page was open (where to return later)
 
         self._init_ui()  # initialize UI
 
@@ -71,7 +73,6 @@ class TabViewWidget(QWidget):
         self._buttons_layout.add_widget(self._back_button)
 
         # add widgets to layout
-        # add configuration data
         self._form_layout.add_row(self._title)
         self._form_layout.add_row("Name:", self._name_line)
         self._form_layout.add_row("Column count:", self._grid_width_line)
@@ -100,5 +101,10 @@ class TabViewWidget(QWidget):
         self.parent_widget().edit_tab(self._tab)
 
     def _return_to_configuration(self):
-        """ open back the configuration creation/view/editing page """
-        self.parent_widget().view_configuration(self._tab.configuration)
+        """ Open back the configuration creation/editing/view page """
+        if self._configuration_page == "edit":
+            self.parent_widget().edit_configuration(self._tab.configuration)
+        elif self._configuration_page == "create":
+            self.parent_widget().create_configuration(self._tab.configuration)
+        else:
+            self.parent_widget().view_configuration(self._tab.configuration)

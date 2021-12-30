@@ -13,10 +13,12 @@ class SensorIndexWidget(QWidget):
     Allows searching, showing selected sensors and creating new sensors
     """
 
-    def __init__(self, db_session, configuration):
+    def __init__(self, db_session, configuration, configuration_page="view"):
         super().__init__()
         self._db_session = db_session
         self._configuration = configuration
+
+        self._configuration_page = configuration_page  # from what page this page was open (where to return later)
 
         self._init_ui()  # initialize UI
 
@@ -98,8 +100,8 @@ class SensorIndexWidget(QWidget):
             .where(Sensor.short_name == sensor_short_name).one_or_none()
 
         if sensor is not None:  # if sensor found
-            self.parent_widget().parent_widget().view_sensor(sensor)
+            self.parent_widget().parent_widget().view_sensor(sensor, self._configuration_page)
 
     def _create_sensor(self):
         """ open a sensor creating page """
-        self.parent_widget().parent_widget().create_sensor(self._configuration)
+        self.parent_widget().parent_widget().create_sensor(self._configuration, self._configuration_page)

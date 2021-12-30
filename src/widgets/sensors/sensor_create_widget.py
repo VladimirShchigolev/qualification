@@ -11,10 +11,12 @@ from src.models.models import Sensor
 class SensorCreateWidget(QWidget):
     """ Widget for creating a sensor """
 
-    def __init__(self, db_session, configuration):
+    def __init__(self, db_session, configuration, configuration_page="view"):
         super().__init__()
         self._db_session = db_session
         self._configuration = configuration
+
+        self._configuration_page = configuration_page  # from what page this page was open (where to return later)
 
         self._init_ui()  # initialize UI
 
@@ -155,5 +157,10 @@ class SensorCreateWidget(QWidget):
             self._return_to_configuration()  # redirect to configuration
 
     def _return_to_configuration(self):
-        """ open back the configuration creation/view/editing page """
-        self.parent_widget().view_configuration(self._configuration)
+        """ Open back the configuration creation/editing/view page """
+        if self._configuration_page == "edit":
+            self.parent_widget().edit_configuration(self._configuration)
+        elif self._configuration_page == "create":
+            self.parent_widget().create_configuration(self._configuration)
+        else:
+            self.parent_widget().view_configuration(self._configuration)

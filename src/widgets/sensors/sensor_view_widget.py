@@ -9,10 +9,12 @@ from __feature__ import snake_case, true_property  # snake_case enabled for Pysi
 class SensorViewWidget(QWidget):
     """ Widget for viewing a certain sensor """
 
-    def __init__(self, db_session, sensor):
+    def __init__(self, db_session, sensor, configuration_page="view"):
         super().__init__()
         self._db_session = db_session
         self._sensor = sensor
+
+        self._configuration_page = configuration_page  # from what page this page was open (where to return later)
 
         self._init_ui()  # initialize UI
 
@@ -103,5 +105,10 @@ class SensorViewWidget(QWidget):
         self.parent_widget().edit_sensor(self._sensor)
 
     def _return_to_configuration(self):
-        """ open back the configuration creation/view/editing page """
-        self.parent_widget().view_configuration(self._sensor.configuration)
+        """ Open back the configuration creation/editing/view page """
+        if self._configuration_page == "edit":
+            self.parent_widget().edit_configuration(self._sensor.configuration)
+        elif self._configuration_page == "create":
+            self.parent_widget().create_configuration(self._sensor.configuration)
+        else:
+            self.parent_widget().view_configuration(self._sensor.configuration)

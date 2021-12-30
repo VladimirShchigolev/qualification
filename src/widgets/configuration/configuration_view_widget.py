@@ -42,10 +42,10 @@ class ConfigurationViewWidget(QWidget):
         # create sensors and tabs display
         self._sensors_and_tabs_layout = QHBoxLayout()
 
-        self._sensors_widget = SensorIndexWidget(self._db_session, self._configuration)
+        self._sensors_widget = SensorIndexWidget(self._db_session, self._configuration, configuration_page="view")
         self._sensors_and_tabs_layout.add_widget(self._sensors_widget)
 
-        self._tabs_widget = TabIndexWidget(self._db_session, self._configuration)
+        self._tabs_widget = TabIndexWidget(self._db_session, self._configuration, configuration_page="view")
         self._sensors_and_tabs_layout.add_widget(self._tabs_widget)
 
         # section of buttons
@@ -54,8 +54,9 @@ class ConfigurationViewWidget(QWidget):
 
         self._load_button = QPushButton("Load")
         self._edit_button = QPushButton("Edit")
+        self._edit_button.clicked.connect(self._edit_configuration)
         self._back_button = QPushButton("Back To Configurations")
-        self._back_button.clicked.connect(self._index_configurations)
+        self._back_button.clicked.connect(self._return_to_configurations)
 
         self._buttons_layout.add_widget(self._load_button)
         self._buttons_layout.add_widget(self._edit_button)
@@ -74,5 +75,10 @@ class ConfigurationViewWidget(QWidget):
         # add buttons
         self._layout.add_layout(self._buttons_layout)
 
-    def _index_configurations(self):
+    def _edit_configuration(self):
+        """ Open configuration editing page """
+        self.parent_widget().edit_configuration(self._configuration)
+
+    def _return_to_configurations(self):
+        """ Open configurations index page """
         self.parent_widget().index_configurations()

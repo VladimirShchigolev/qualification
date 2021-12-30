@@ -12,9 +12,11 @@ from src.widgets.cells.cell_grid_management_widget import CellGridManagementWidg
 class TabCreateEditWidget(QWidget):
     """ Widget for creating or editing a tab """
 
-    def __init__(self, db_session, configuration=None, tab=None):
+    def __init__(self, db_session, configuration=None, tab=None, configuration_page="view"):
         super().__init__()
         self._db_session = db_session
+
+        self._configuration_page = configuration_page  # from what page this page was open (where to return later)
 
         # define if tab is being created or edited
         if tab:
@@ -42,7 +44,7 @@ class TabCreateEditWidget(QWidget):
         # create a title
         self._title = QLabel()
         if self._edit_mode:
-            self._title.text = f'Edit tab {self._tab.name}'
+            self._title.text = f'Edit Tab {self._tab.name}'
         else:
             self._title.text = "Create Tab"
         self._title.font = QFont("Lato", 18)
@@ -205,7 +207,7 @@ class TabCreateEditWidget(QWidget):
                 SensorCell(cell=cell, sensor=sensor_cell.sensor)
 
     def _save(self):
-        """ Create a tab from data in the form """
+        """ Save tab from data in the form """
 
         # get data from the form
         name = self._name_line.text
@@ -246,7 +248,7 @@ class TabCreateEditWidget(QWidget):
             self._return_to_configuration()  # redirect to configuration
 
     def _cancel(self):
-        """ revert changes and open back the configuration creation/editing page """
+        """ Revert changes and open back the configuration creation/editing page """
 
         # revert changes
         if self._edit_mode:
@@ -259,5 +261,10 @@ class TabCreateEditWidget(QWidget):
         self._return_to_configuration()
 
     def _return_to_configuration(self):
-        """ revert changes and open back the configuration creation/editing page """
-        self.parent_widget().view_configuration(self._configuration)
+        """ Open back the configuration creation/editing/view page """
+        if self._configuration_page == "edit":
+            self.parent_widget().edit_configuration(self._configuration)
+        elif self._configuration_page == "create":
+            self.parent_widget().create_configuration(self._configuration)
+        else:
+            self.parent_widget().view_configuration(self._configuration)

@@ -27,6 +27,22 @@ class Configuration(Base):
         """ Create a string value of a configuration object"""
         return self.name
 
+    @staticmethod
+    def validate(name, check_for_duplicates=True, db_session=None):
+        """ Check if given fields are valid """
+
+        if check_for_duplicates:
+            # check if sensor with such short name exists in this configuration
+            sensor = db_session.query(Configuration).filter(Configuration.name == name).one_or_none()
+            if sensor:
+                raise ValueError("A sensor with such short name already exists in this configuration")
+
+        # name length
+        if not 1 <= len(name) <= 30:
+            raise ValueError("Name should be 1 to 30 characters long!")
+
+        return True
+
 
 class SensorCell(Base):
     """ Cell and Sensors NxM relationship model """
@@ -84,7 +100,7 @@ class Sensor(Base):
 
         if check_for_duplicates:
             # check if sensor with such short name exists in this configuration
-            sensor = db_session.query(Sensor).filter(Sensor.configuration == configuration)\
+            sensor = db_session.query(Sensor).filter(Sensor.configuration == configuration) \
                 .filter(Sensor.short_name == short_name).one_or_none()
             if sensor:
                 raise ValueError("A sensor with such short name already exists in this configuration")
@@ -104,7 +120,8 @@ class Sensor(Base):
         return True
 
 
-Configuration.sensors = relationship("Sensor", cascade="all,delete", order_by=Sensor.short_name, back_populates="configuration")
+Configuration.sensors = relationship("Sensor", cascade="all,delete", order_by=Sensor.short_name,
+                                     back_populates="configuration")
 
 
 class Tab(Base):
@@ -189,4 +206,3 @@ Tab.cells = relationship("Cell", cascade="all,delete", order_by=Cell.id, back_po
 
 SensorCell.sensor = relationship("Sensor", back_populates="cell_sensors")
 SensorCell.cell = relationship("Cell", back_populates="cell_sensors")
-
