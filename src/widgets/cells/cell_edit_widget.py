@@ -113,9 +113,12 @@ class CellEditWidget(QWidget):
 
         # get sensors of the configuration that are not added to the cell
         unassigned_sensors = self._db_session.query(Sensor) \
-            .outerjoin(SensorCell) \
             .filter(Sensor.configuration == self._configuration) \
-            .filter(SensorCell.cell != self._cell) \
+            .except_(
+                self._db_session.query(Sensor)
+                .join(SensorCell)
+                .filter(SensorCell.cell == self._cell)
+            ) \
             .order_by(Sensor.short_name) \
             .all()
 
