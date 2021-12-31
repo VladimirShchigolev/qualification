@@ -202,7 +202,7 @@ class CellEditWidget(QWidget):
         # get selected items
         selected_items = self._sensors_list.selected_items()
 
-        if len(selected_items):
+        if selected_items:
             sensor_short_name = selected_items[0].data(0)  # sensor to delete is the first and only selected item
             # get the sensor that is being removed
             sensor = self._db_session.query(Sensor) \

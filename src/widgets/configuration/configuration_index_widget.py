@@ -90,7 +90,7 @@ class ConfigurationIndexWidget(QWidget):
         """ open view page for the selected configuration """
         # get selected items
         selected_items = self._configurations_list.selected_items()
-        if len(selected_items):
+        if selected_items:
             self._show_list_item_configuration(selected_items[0])  # show the first and only item
 
     def _show_list_item_configuration(self, list_item):

@@ -88,7 +88,7 @@ class SensorIndexWidget(QWidget):
         """ open view page for the selected sensor """
         # get selected items
         selected_items = self._sensors_list.selected_items()
-        if len(selected_items):
+        if selected_items:
             self._show_list_item_sensor(selected_items[0])  # show the first and only item
 
     def _show_list_item_sensor(self, list_item):

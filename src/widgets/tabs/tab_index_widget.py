@@ -87,7 +87,7 @@ class TabIndexWidget(QWidget):
         """ open view page for the selected tab """
         # get selected items
         selected_items = self._tabs_list.selected_items()
-        if len(selected_items):
+        if selected_items:
             self._show_list_item_tab(selected_items[0])  # show the first and only item
 
     def _show_list_item_tab(self, list_item):
