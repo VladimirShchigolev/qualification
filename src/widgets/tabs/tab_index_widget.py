@@ -13,11 +13,14 @@ from src.models.models import Tab
 class TabIndexWidget(QWidget):
     """ Widget for showing tabs of the configuration."""
 
-    def __init__(self, db_session, configuration, configuration_page="view"):
+    def __init__(self, db_session, configuration, configuration_page="view", read_only=False):
         """Create tab index widget."""
         super().__init__()
         self._db_session = db_session
         self._configuration = configuration
+
+        # True if creating new tabs is allowed
+        self._read_only = read_only
 
         # from what page this page was open (where to return later)
         self._configuration_page = configuration_page
@@ -58,12 +61,14 @@ class TabIndexWidget(QWidget):
         # section of buttons
         self._buttons_layout = QHBoxLayout()
 
-        self._new_button = QPushButton("New")
-        self._new_button.clicked.connect(self._create_tab)
+        if not self._read_only:
+            self._new_button = QPushButton("New")
+            self._new_button.clicked.connect(self._create_tab)
+
+            self._buttons_layout.add_widget(self._new_button)
+
         self._view_button = QPushButton("View")
         self._view_button.clicked.connect(self._show_selected_tab)
-
-        self._buttons_layout.add_widget(self._new_button)
 
         # move view button to the right
         self._buttons_layout.add_stretch(1)

@@ -47,11 +47,11 @@ class ConfigurationViewWidget(QWidget):
         self._sensors_and_tabs_layout = QHBoxLayout()
 
         self._sensors_widget = SensorIndexWidget(self._db_session, self._configuration,
-                                                 configuration_page="view")
+                                                 configuration_page="view", read_only=True)
         self._sensors_and_tabs_layout.add_widget(self._sensors_widget)
 
         self._tabs_widget = TabIndexWidget(self._db_session, self._configuration,
-                                           configuration_page="view")
+                                           configuration_page="view", read_only=True)
         self._sensors_and_tabs_layout.add_widget(self._tabs_widget)
 
         # section of buttons

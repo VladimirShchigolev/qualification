@@ -13,11 +13,14 @@ from src.models.models import Sensor
 class SensorIndexWidget(QWidget):
     """ Widget for showing sensors of the configuration."""
 
-    def __init__(self, db_session, configuration, configuration_page="view"):
+    def __init__(self, db_session, configuration, configuration_page="view", read_only=False):
         """Create sensor index widget."""
         super().__init__()
         self._db_session = db_session
         self._configuration = configuration
+
+        # True if creating new tabs is allowed
+        self._read_only = read_only
 
         # from what page this page was open (where to return later)
         self._configuration_page = configuration_page
@@ -59,12 +62,14 @@ class SensorIndexWidget(QWidget):
         # section of buttons
         self._buttons_layout = QHBoxLayout()
 
-        self._new_button = QPushButton("New")
-        self._new_button.clicked.connect(self._create_sensor)
+        if not self._read_only:
+            self._new_button = QPushButton("New")
+            self._new_button.clicked.connect(self._create_sensor)
+
+            self._buttons_layout.add_widget(self._new_button)
+
         self._view_button = QPushButton("View")
         self._view_button.clicked.connect(self._show_selected_sensor)
-
-        self._buttons_layout.add_widget(self._new_button)
 
         # move view button to the right
         self._buttons_layout.add_stretch(1)
