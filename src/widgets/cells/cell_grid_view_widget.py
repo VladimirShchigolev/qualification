@@ -1,17 +1,19 @@
-from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QScrollArea, QGridLayout, QSizePolicy
+from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QScrollArea, QGridLayout, \
+    QSizePolicy
+
+# enable snake_case for Pyside6
 # noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
+from __feature__ import snake_case, true_property
 
 from src.models.models import Cell
 from src.widgets.cells.cell_view_widget import CellViewWidget
 
 
 class CellGridViewWidget(QWidget):
-    """ Widget responsible for showing all cells belonging to a given tab.
-    Allows selecting cells and viewing their data.
-    """
+    """ Widget responsible for showing all cells of the tab."""
 
     def __init__(self, db_session, tab):
+        """Create grid view widget."""
         super().__init__()
         self._db_session = db_session
         self._tab = tab
@@ -23,7 +25,7 @@ class CellGridViewWidget(QWidget):
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
-        """ Initialize UI """
+        """Initialize UI."""
         # create a layout
         self._layout = QHBoxLayout(self)
 
@@ -46,20 +48,19 @@ class CellGridViewWidget(QWidget):
         self._layout.add_widget(self._right_widget)
 
     def update_grid(self):
-        """ Update grid representation. """
-
+        """Update grid representation."""
         self._clear_grid()  # clear the grid
         self._fill_grid()  # and fill it according to DB session data
 
     def _clear_grid(self):
-        """ Delete all elements from grid layout. """
+        """Delete all elements from grid layout."""
         self._cells.clear()
         self._selected_cells = set()
         for i in range(self._grid_layout.count() - 1, -1, -1):
             self._grid_layout.take_at(i).widget().delete_later()
 
     def _fill_grid(self):
-        """ Fill grid with cells """
+        """Fill grid with cells."""
 
         cells = self._db_session.query(Cell).filter(Cell.tab == self._tab) \
             .order_by(Cell.row).order_by(Cell.column).all()
@@ -72,12 +73,14 @@ class CellGridViewWidget(QWidget):
             cell_button.size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             cell_button.minimum_height = 40
             cell_button.minimum_width = 80
-            self._grid_layout.add_widget(cell_button, cell.row, cell.column, cell.rowspan, cell.colspan)
+            self._grid_layout.add_widget(cell_button, cell.row, cell.column, cell.rowspan,
+                                         cell.colspan)
 
             # add cell selection management on button click
             cell_button.clicked.connect(
                 (
-                    lambda cell_row, cell_column: lambda: self._press_cell_button(cell_row, cell_column)
+                    lambda cell_row, cell_column: lambda: self._press_cell_button(cell_row,
+                                                                                  cell_column)
                 )(cell.row, cell.column)
             )
 
@@ -89,10 +92,12 @@ class CellGridViewWidget(QWidget):
             self._grid_layout.set_column_stretch(column, 1)
 
     def _press_cell_button(self, row, column):
-        """ Manages cell selection when pressing cell buttons """
+        """Manages cell selection when pressing cell buttons."""
 
         # set right widget according to the selected cell
-        self._layout.remove_widget(self._right_widget)  # remove old widget
+
+        # remove old widget
+        self._layout.remove_widget(self._right_widget)
         self._right_widget.deleteLater()
 
         # set a cell editing widget

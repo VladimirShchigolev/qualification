@@ -1,25 +1,27 @@
 from PySide6.QtCore import Qt, QMargins
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, QLabel, QHBoxLayout, \
-    QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, \
+    QLabel, QHBoxLayout, QPushButton
+
+# enable snake_case for Pyside6
 # noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
+from __feature__ import snake_case, true_property
+
 from src.models.models import Configuration
 
 
 class ConfigurationIndexWidget(QWidget):
-    """ Widget responsible for showing all configurations.
-    Allows searching, showing selected configuration and creating new configurations
-    """
+    """Widget responsible for showing all configurations."""
 
     def __init__(self, db_session):
+        """Create configuration index page"""
         super().__init__()
         self._db_session = db_session
 
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
-        """ Initialize UI """
+        """Initialize UI."""
         # create a layout
         self._layout = QVBoxLayout(self)
         self._layout.contents_margins = QMargins(15, 10, 15, 10)
@@ -41,7 +43,7 @@ class ConfigurationIndexWidget(QWidget):
         self._configurations_list.alternating_row_colors = True
 
         # get all configurations from DB
-        all_configurations = self._db_session.query(Configuration)\
+        all_configurations = self._db_session.query(Configuration) \
             .order_by(Configuration.name).all()
 
         # add configurations to the list widget
@@ -65,7 +67,10 @@ class ConfigurationIndexWidget(QWidget):
         self._buttons_layout.add_widget(self._new_button)
         self._buttons_layout.add_widget(self._load_button)
         self._buttons_layout.add_widget(self._view_button)
-        self._buttons_layout.add_stretch(1)  # move close button to the right
+
+        # move close button to the right
+        self._buttons_layout.add_stretch(1)
+
         self._buttons_layout.add_widget(self._close_button)
 
         # add widgets to layout
@@ -75,7 +80,7 @@ class ConfigurationIndexWidget(QWidget):
         self._layout.add_layout(self._buttons_layout)
 
     def _search(self, search_string):
-        """ Filter configuration by the search string """
+        """Filter configuration by the search string."""
 
         # get configurations which name starts with the search_string
         search_string = "{}%".format(search_string)
@@ -88,27 +93,29 @@ class ConfigurationIndexWidget(QWidget):
             QListWidgetItem(str(configuration), self._configurations_list)
 
     def _create_configuration(self):
-        """ Open configuration creation page """
+        """Open configuration creation page."""
         self.parent_widget().create_configuration()
 
     def _show_selected_configuration(self):
-        """ open view page for the selected configuration """
+        """Open view page for the selected configuration."""
         # get selected items
         selected_items = self._configurations_list.selected_items()
         if selected_items:
-            self._show_list_item_configuration(selected_items[0])  # show the first and only item
+            # show the first and only item
+            self._show_list_item_configuration(selected_items[0])
 
     def _show_list_item_configuration(self, list_item):
-        """ open view page for the selected/clicked configuration """
-        configuration_name = list_item.data(0)  # get selected configuration name
+        """Open view page for the selected/clicked configuration."""
+        # get selected configuration name
+        configuration_name = list_item.data(0)
 
         # find configuration in DB
-        configuration = self._db_session.query(Configuration)\
+        configuration = self._db_session.query(Configuration) \
             .where(Configuration.name == configuration_name).one_or_none()
 
         if configuration is not None:  # if configuration found
             self.parent_widget().view_configuration(configuration)
 
     def _close(self):
-        """ closes window """
+        """Close window."""
         self.parent_widget().close()

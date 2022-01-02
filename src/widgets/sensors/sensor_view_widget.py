@@ -1,25 +1,29 @@
 from PySide6.QtCore import Qt, QMargins
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, QVBoxLayout, \
-    QMessageBox
+from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, \
+    QVBoxLayout, QMessageBox
+
+# enable snake_case for Pyside6
 # noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
+from __feature__ import snake_case, true_property
 
 
 class SensorViewWidget(QWidget):
-    """ Widget for viewing a certain sensor """
+    """Widget for viewing a certain sensor."""
 
     def __init__(self, db_session, sensor, configuration_page="view"):
+        """Create sensor viewing widget."""
         super().__init__()
         self._db_session = db_session
         self._sensor = sensor
 
-        self._configuration_page = configuration_page  # from what page this page was open (where to return later)
+        # from what page this page was open (where to return later)
+        self._configuration_page = configuration_page
 
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
-        """ Initialize UI """
+        """Initialize UI."""
         # create a layout
         self._layout = QVBoxLayout(self)
 
@@ -54,7 +58,6 @@ class SensorViewWidget(QWidget):
         self._physical_unit_line.text = self._sensor.physical_unit
         self._physical_unit_line.read_only = True
 
-
         # section of buttons
         self._buttons_layout = QHBoxLayout()
         self._buttons_layout.contents_margins = QMargins(10, 0, 10, 0)
@@ -70,10 +73,14 @@ class SensorViewWidget(QWidget):
 
         self._buttons_layout.add_widget(self._edit_button)
         self._buttons_layout.add_widget(self._delete_button)
-        self._buttons_layout.add_stretch(1)  # move back button to the right
+
+        # move back button to the right
+        self._buttons_layout.add_stretch(1)
+
         self._buttons_layout.add_widget(self._back_button)
 
         # add widgets to layout
+
         # add configuration data
         self._form_layout.add_row(self._title)
         self._form_layout.add_row("Short Name:", self._short_name_line)
@@ -88,11 +95,12 @@ class SensorViewWidget(QWidget):
         self._layout.add_layout(self._buttons_layout)
 
     def _delete(self):
-        """ Removes the sensor from database """
+        """Removes the sensor from database."""
         # ask for confirmation
-        confirmation = QMessageBox.question(self, "Delete",
-                                            f'Are you sure you want to delete sensor {self._sensor.short_name}?',
-                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        confirmation = QMessageBox.question(
+            self, "Delete", f'Are you sure you want to delete sensor {self._sensor.short_name}?',
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        )
 
         # if confirmed, remove sensor and redirect to configuration
         if confirmation == QMessageBox.Yes:
@@ -101,11 +109,11 @@ class SensorViewWidget(QWidget):
             self._return_to_configuration()
 
     def _edit_sensor(self):
-        """ open sensor editing page """
+        """Open sensor editing page."""
         self.parent_widget().edit_sensor(self._sensor)
 
     def _return_to_configuration(self):
-        """ Open back the configuration creation/editing/view page """
+        """Open back the configuration creation/editing/view page."""
         if self._configuration_page == "edit":
             self.parent_widget().edit_configuration(self._sensor.configuration)
         elif self._configuration_page == "create":

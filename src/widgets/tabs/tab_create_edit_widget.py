@@ -1,22 +1,26 @@
 from PySide6.QtCore import Qt, QMargins, QRegularExpression
 from PySide6.QtGui import QFont, QRegularExpressionValidator
-from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, QVBoxLayout, \
-    QComboBox, QMessageBox
+from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, \
+    QVBoxLayout, QComboBox, QMessageBox
+
+# enable snake_case for Pyside6
 # noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
+from __feature__ import snake_case, true_property
 
 from src.models.models import Tab, Cell, SensorCell
 from src.widgets.cells.cell_grid_management_widget import CellGridManagementWidget
 
 
 class TabCreateEditWidget(QWidget):
-    """ Widget for creating or editing a tab """
+    """Widget for creating or editing a tab."""
 
     def __init__(self, db_session, configuration=None, tab=None, configuration_page="view"):
+        """Create tab creation/editing widget."""
         super().__init__()
         self._db_session = db_session
 
-        self._configuration_page = configuration_page  # from what page this page was open (where to return later)
+        # from what page this page was open (where to return later)
+        self._configuration_page = configuration_page
 
         # define if tab is being created or edited
         if tab:
@@ -33,7 +37,7 @@ class TabCreateEditWidget(QWidget):
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
-        """ Initialize UI """
+        """Initialize UI."""
         # create a layout
         self._layout = QVBoxLayout(self)
 
@@ -62,29 +66,39 @@ class TabCreateEditWidget(QWidget):
 
         # create a grid display
         self._grid = CellGridManagementWidget(self._db_session, self._tab)
+
+        # if a new tab is created, set grid to default
         if not self._edit_mode:
-            self._resize(0, 0, 2, 5)  # if a new tab is created, set grid to default
+            self._resize(0, 0, 2, 5)
 
         # create grid width field display
         self._grid_width_line = QComboBox()
-        self._grid_width_line.add_items(  # fill it with integers from 1 to 10
+
+        # fill it with width from 1 to 10
+        self._grid_width_line.add_items(
             [str(number) for number in range(1, 11)]
         )
         self._grid_width_line.current_text = str(self._tab.grid_width)
 
-        # change height combobox options on width change; resize grid on width change
+        # change height combobox options on width change;
+        # resize grid on width change
         self._grid_width_line.currentTextChanged.connect(self._update_possible_heights)
 
         # create grid height field display
         self._grid_height_line = QComboBox()
-        self._grid_height_line.add_items(  # fill it with integers from 1 to 20
+
+        # fill it with height from 1 to 20
+        self._grid_height_line.add_items(
             [str(number) for number in range(1, 21)]
         )
+
         self._grid_height_line.current_text = str(self._tab.grid_height)
+
         # resize grid on height change
         self._grid_height_line.currentTextChanged.connect(self._update_height)
 
-        self._update_possible_heights()  # set provided height according to the chosen width
+        # set provided height according to the chosen width
+        self._update_possible_heights()
 
         # section of buttons
         self._buttons_layout = QHBoxLayout()
@@ -96,10 +110,14 @@ class TabCreateEditWidget(QWidget):
         self._cancel_button.clicked.connect(self._cancel)
 
         self._buttons_layout.add_widget(self._save_button)
-        self._buttons_layout.add_stretch(1)  # move cancel button to the right
+
+        # move cancel button to the right
+        self._buttons_layout.add_stretch(1)
+
         self._buttons_layout.add_widget(self._cancel_button)
 
         # add widgets to layout
+
         # add configuration data
         self._form_layout.add_row(self._title)
         self._form_layout.add_row("Name:", self._name_line)
@@ -112,24 +130,27 @@ class TabCreateEditWidget(QWidget):
         self._layout.add_layout(self._buttons_layout)
 
     def _update_possible_heights(self):
-        """ update provided grid height values according to chosen grid width value """
+        """Update provided grid height to match grid width value."""
+        # get chosen value
+        width = int(self._grid_width_line.current_text)
 
-        width = int(self._grid_width_line.current_text)  # get chosen value
-
-        current_height = int(self._grid_height_line.current_text)  # save current height
+        # save current height
+        current_height = int(self._grid_height_line.current_text)
 
         # remove onTextChange event handler while editing
         self._grid_height_line.currentTextChanged.disconnect(self._update_height)
         self._grid_height_line.clear()  # clear all units
 
-        maximal_height = min(20, 100 // width)  # maximal cell count per tab is 100 and maximal height is 20
+        # maximal cell count per tab is 100 and maximal height is 20
+        maximal_height = min(20, 100 // width)
 
         # add height values for chosen width
         self._grid_height_line.add_items(
             [str(possible_height) for possible_height in range(1, maximal_height + 1)]
         )
 
-        # if current height is no longer possible, change it to maximal possible
+        # if current height is no longer possible,
+        # change it to maximal possible
         if current_height > maximal_height:
             self._grid_height_line.current_text = str(maximal_height)
         else:  # otherwise set to previous value
@@ -138,23 +159,23 @@ class TabCreateEditWidget(QWidget):
         # add event handler back when editing is finished
         self._grid_height_line.currentTextChanged.connect(self._update_height)
 
-        print(type(self._tab.grid_width), type(self._tab.grid_height))
         # resize grid
         self._resize(self._tab.grid_width, self._tab.grid_height, width, self._tab.grid_height)
 
     def _update_height(self):
-        """ Resize the grid on height change """
+        """Resize the grid on height change."""
+        # get chosen value
+        height = int(self._grid_height_line.current_text)
 
-        height = int(self._grid_height_line.current_text)  # get chosen value
-
-        self._resize(self._tab.grid_width, self._tab.grid_height, self._tab.grid_width, height)  # resize the grid
+        self._resize(self._tab.grid_width, self._tab.grid_height, self._tab.grid_width,
+                     height)  # resize the grid
 
     def _resize(self, old_width, old_height, new_width, new_height):
-        """ Resize the grid
-        Resize the grid by deleting old cells if new height or new width are smaller than the old ones. Create new
+        """Resize the grid.
+        Resize the grid by deleting old cells if new height
+        or new width are smaller than the old ones. Create new
         cells if new width or new height are greater than the old ones.
         """
-
         # delete cells that are beyond new grid size
         self._db_session.query(Cell).filter(Cell.tab == self._tab) \
             .filter(Cell.column >= new_width).delete(synchronize_session=False)
@@ -165,28 +186,29 @@ class TabCreateEditWidget(QWidget):
         # create new cells to fill grid up to the new size
         for column in range(old_width, new_width):
             for row in range(new_height):
-                print(row, column)
                 Cell(tab=self._tab, row=row, column=column)
 
         for row in range(old_height, new_height):
             for column in range(min(new_width, old_width)):
-                print(row, column)
                 Cell(tab=self._tab, row=row, column=column)
 
+        # update the tab data
         self._tab.grid_width = new_width
         self._tab.grid_height = new_height
         self._grid.update_grid()
 
     def _create_backup(self):
-        """ Create a backup for reverting changes"""
+        """Create a backup for reverting changes later if needed."""
         # create a backup tab
-        self._backup_tab = Tab(configuration=self._configuration, name="", grid_width=self._tab.grid_width,
+        self._backup_tab = Tab(configuration=self._configuration, name="",
+                               grid_width=self._tab.grid_width,
                                grid_height=self._tab.grid_height)
 
         # get all the cells of the tab and create their backups
         cells = self._db_session.query(Cell).filter(Cell.tab == self._tab).all()
         for cell in cells:
-            Cell(tab=self._backup_tab, row=cell.row, column=cell.column, rowspan=cell.rowspan, colspan=cell.colspan,
+            Cell(tab=self._backup_tab, row=cell.row, column=cell.column, rowspan=cell.rowspan,
+                 colspan=cell.colspan,
                  title=cell.title)
 
         # get all the sensor-cell records and create their backups
@@ -197,33 +219,35 @@ class TabCreateEditWidget(QWidget):
 
         for sensor_cell in sensor_cells:
             # find the backup of the cell
-            cell = self._db_session.query(Cell)\
-                .filter(Cell.tab == self._backup_tab)\
-                .filter(Cell.row == sensor_cell.cell.row)\
-                .filter(Cell.column == sensor_cell.cell.column)\
+            cell = self._db_session.query(Cell) \
+                .filter(Cell.tab == self._backup_tab) \
+                .filter(Cell.row == sensor_cell.cell.row) \
+                .filter(Cell.column == sensor_cell.cell.column) \
                 .one_or_none()
 
             if cell:
                 SensorCell(cell=cell, sensor=sensor_cell.sensor)
 
     def _save(self):
-        """ Save tab from data in the form """
-
+        """Save tab from data in the form."""
         # get data from the form
         name = self._name_line.text
         grid_width = int(self._grid_width_line.current_text)
         grid_height = int(self._grid_height_line.current_text)
 
-        # determine if check for duplicates is needed
-        check_for_duplicates = name != self._tab.name  # needed only when tab name gets changed
+        # check for duplicates is needed
+        # only when tab name gets changed
+        check_for_duplicates = name != self._tab.name
 
         # check if data is valid
         validation_passed = False
         try:
             validation_passed = Tab.validate(self._configuration, name, grid_width, grid_height,
-                                             db_session=self._db_session, check_for_duplicates=check_for_duplicates)
+                                             db_session=self._db_session,
+                                             check_for_duplicates=check_for_duplicates)
         except ValueError as error:
-            QMessageBox.critical(self, "Error!", str(error), QMessageBox.Ok, QMessageBox.Ok)  # show error message
+            QMessageBox.critical(self, "Error!", str(error), QMessageBox.Ok,
+                                 QMessageBox.Ok)  # show error message
 
         if validation_passed:  # if data is valid
             # set data to created/edited tab object
@@ -242,14 +266,16 @@ class TabCreateEditWidget(QWidget):
             else:
                 message = f'Tab {self._tab.name} created successfully!'
 
+            # show success message
             QMessageBox.information(self, "Success!", message,
-                                    QMessageBox.Ok, QMessageBox.Ok)  # show success message
+                                    QMessageBox.Ok, QMessageBox.Ok)
 
-            self._return_to_configuration()  # redirect to configuration
+            # redirect to configuration
+            self._return_to_configuration()
 
     def _cancel(self):
-        """ Revert changes and open back the configuration creation/editing page """
-
+        """Revert changes and open back
+        the configuration creation/editing page."""
         # revert changes
         if self._edit_mode:
             tab_name = self._tab.name
@@ -261,7 +287,7 @@ class TabCreateEditWidget(QWidget):
         self._return_to_configuration()
 
     def _return_to_configuration(self):
-        """ Open back the configuration creation/editing/view page """
+        """Open back the configuration creation/editing/view page."""
         if self._configuration_page == "edit":
             self.parent_widget().edit_configuration(self._configuration)
         elif self._configuration_page == "create":

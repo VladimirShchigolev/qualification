@@ -1,27 +1,28 @@
 from PySide6.QtCore import Qt, QMargins, QRegularExpression
 from PySide6.QtGui import QFont, QRegularExpressionValidator
-from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, QVBoxLayout, \
-    QComboBox, QMessageBox, QCheckBox, QSizePolicy
-# noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
+from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, \
+    QVBoxLayout, QMessageBox, QCheckBox
 
-from src.models.models import Configuration, Tab, Cell, SensorCell
-from src.widgets.cells.cell_grid_management_widget import CellGridManagementWidget
+# enable snake_case for Pyside6
+# noinspection PyUnresolvedReferences
+from __feature__ import snake_case, true_property
+
+from src.models.models import Configuration
 from src.widgets.sensors.sensor_index_widget import SensorIndexWidget
 from src.widgets.tabs.tab_index_widget import TabIndexWidget
 
 
 class ConfigurationCreateEditWidget(QWidget):
-    """ Widget for creating (manually) or editing a configuration """
+    """Widget for creating (manually) or editing a configuration."""
 
     def __init__(self, db_session, configuration=None, returned_to_creation=False):
+        """Create configuration creating/editing widget"""
         super().__init__()
         self._db_session = db_session
 
-        # set to true if returned to the creation page after creating/editing sensors or tabs
+        # set to true if returned to the creation
+        # page after creating/editing/viewing sensors or tabs
         self._returned_to_creation = returned_to_creation
-
-        print("configuration:", configuration)
 
         # define if configuration is being created or edited
         if configuration:
@@ -29,17 +30,14 @@ class ConfigurationCreateEditWidget(QWidget):
             self._edit_mode = True
         else:
             # create a new configuration to edit it later
-            print("configuration created")
             self._configuration = Configuration(name="", show_unknown_sensors=False)
             self._db_session.add(self._configuration)
             self._edit_mode = False
 
-        print("created: ", self._configuration.id)
-
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
-        """ Initialize UI """
+        """Initialize UI."""
         # create a layout
         self._layout = QVBoxLayout(self)
 
@@ -69,8 +67,8 @@ class ConfigurationCreateEditWidget(QWidget):
         self._name_line.textChanged.connect(self._update_name)
 
         self._show_unknown_sensors = QCheckBox()
-        print("check: ", self._configuration.show_unknown_sensors)
         self._show_unknown_sensors.checked = self._configuration.show_unknown_sensors
+
         self._show_unknown_sensors.clicked.connect(self._update_showing_unknown_sensors)
 
         # create sensors and tabs display
@@ -81,10 +79,12 @@ class ConfigurationCreateEditWidget(QWidget):
 
         self._sensors_and_tabs_layout = QHBoxLayout()
 
-        self._sensors_widget = SensorIndexWidget(self._db_session, self._configuration, configuration_page=page)
+        self._sensors_widget = SensorIndexWidget(self._db_session, self._configuration,
+                                                 configuration_page=page)
         self._sensors_and_tabs_layout.add_widget(self._sensors_widget)
 
-        self._tabs_widget = TabIndexWidget(self._db_session, self._configuration, configuration_page=page)
+        self._tabs_widget = TabIndexWidget(self._db_session, self._configuration,
+                                           configuration_page=page)
         self._sensors_and_tabs_layout.add_widget(self._tabs_widget)
 
         # section of buttons
@@ -97,7 +97,10 @@ class ConfigurationCreateEditWidget(QWidget):
         self._cancel_button.clicked.connect(self._cancel)
 
         self._buttons_layout.add_widget(self._save_button)
-        self._buttons_layout.add_stretch(1)  # move cancel button to the right
+
+        # move cancel button to the right
+        self._buttons_layout.add_stretch(1)
+
         self._buttons_layout.add_widget(self._cancel_button)
 
         # add widgets to layout
@@ -110,24 +113,24 @@ class ConfigurationCreateEditWidget(QWidget):
         self._layout.add_layout(self._buttons_layout)
 
     def _update_name(self):
-        """ Updates configuration name when it changes """
+        """Update configuration name."""
         name = self._name_line.text
         self._configuration.name = name
 
     def _update_showing_unknown_sensors(self):
-        """ Updates option of showing unknown sensors when it changes """
+        """Update option of showing unknown sensors."""
         show = self._show_unknown_sensors.checked
         self._configuration.show_unknown_sensors = show
 
     def _save(self):
-        """ Save configuration from data in the form """
-
+        """Save configuration from data in the form."""
         # get data from the form
         name = self._name_line.text
         include_unknown_sensor_tab = self._show_unknown_sensors.checked
 
-        # determine if check for duplicates is needed
-        check_for_duplicates = name != self._configuration.name  # needed only when configuration name gets changed
+        # check for duplicates is needed
+        # only when configuration name gets changed
+        check_for_duplicates = name != self._configuration.name
 
         # check if data is valid
         validation_passed = False
@@ -135,7 +138,8 @@ class ConfigurationCreateEditWidget(QWidget):
             validation_passed = Configuration.validate(name, db_session=self._db_session,
                                                        check_for_duplicates=check_for_duplicates)
         except ValueError as error:
-            QMessageBox.critical(self, "Error!", str(error), QMessageBox.Ok, QMessageBox.Ok)  # show error message
+            QMessageBox.critical(self, "Error!", str(error), QMessageBox.Ok,
+                                 QMessageBox.Ok)  # show error message
 
         if validation_passed:  # if data is valid
             # set data to created/edited configuration object
@@ -148,21 +152,23 @@ class ConfigurationCreateEditWidget(QWidget):
             else:
                 message = f'Configuration {self._configuration.name} created successfully!'
 
+            # show success message
             QMessageBox.information(self, "Success!", message,
-                                    QMessageBox.Ok, QMessageBox.Ok)  # show success message
+                                    QMessageBox.Ok, QMessageBox.Ok)
 
             self._db_session.commit()
 
-            self._return_to_configurations()  # redirect to configuration index
+            # redirect to configuration index
+            self._return_to_configurations()
 
     def _cancel(self):
-        """ Revert changes and open back the configuration index/view page """
-
+        """Revert changes and open back
+        the configuration index/view page."""
         # revert changes
         self._db_session.rollback()
 
         self._return_to_configurations()
 
     def _return_to_configurations(self):
-        """ Open configurations index page """
+        """Open configurations index page."""
         self.parent_widget().index_configurations()

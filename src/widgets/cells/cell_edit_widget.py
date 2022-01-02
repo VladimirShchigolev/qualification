@@ -2,19 +2,19 @@ from PySide6.QtCore import Qt, QRegularExpression, QMargins
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout, \
     QLineEdit, QComboBox, QListWidget, QListWidgetItem, QMessageBox
+
+# enable snake_case for Pyside6
 # noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
+from __feature__ import snake_case, true_property
 
 from src.models.models import Sensor, SensorCell
 
 
 class CellEditWidget(QWidget):
-    """ Widget responsible for editing a cell.
-    Allows selecting and removing sensors for the cell
-    and editing the name of the cell if more than one sensor is used.
-    """
+    """Widget for editing a cell."""
 
     def __init__(self, db_session, cell):
+        """Create cell editing widget."""
         super().__init__()
         self._db_session = db_session
         self._cell = cell
@@ -23,7 +23,7 @@ class CellEditWidget(QWidget):
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
-        """ Initialize UI """
+        """Initialize UI."""
         self.maximum_width = 250
         # create a layout
         self._layout = QVBoxLayout(self)
@@ -42,7 +42,8 @@ class CellEditWidget(QWidget):
             .order_by(Sensor.short_name) \
             .all()
 
-        self._title_line.read_only = len(cell_sensors) <= 1  # make title editable if cell represents a sensor group
+        # make title editable if cell represents a sensor group
+        self._title_line.read_only = len(cell_sensors) <= 1
 
         self._title_line.tool_tip = "Title can be set manually only for group of sensors."
 
@@ -54,9 +55,12 @@ class CellEditWidget(QWidget):
         # create sensor search combo box
         self._sensors_search = QComboBox()
         self._sensors_search.editable = True
-        self._sensors_search.completer().case_sensitivity = Qt.CaseInsensitive  # set case insensitive completion
 
-        # set validation rules to upper and lower English letters, digits and underscore, 1-10 characters in length
+        # set case insensitive completion
+        self._sensors_search.completer().case_sensitivity = Qt.CaseInsensitive
+
+        # set validation rules to upper and lower English letters,
+        # digits and underscore, 1-10 characters in length
         self._sensors_search.set_validator(
             QRegularExpressionValidator(QRegularExpression(r'[A-Za-z0-9_]{1,10}'))
         )
@@ -81,7 +85,8 @@ class CellEditWidget(QWidget):
         self._remove_button.clicked.connect(self._remove_sensor)
 
         self._buttons_layout.add_widget(self._split_button)
-        self._buttons_layout.add_stretch(1)  # move view button to the right
+        # move view button to the right
+        self._buttons_layout.add_stretch(1)
         self._buttons_layout.add_widget(self._remove_button)
 
         # add widgets to layout
@@ -91,9 +96,10 @@ class CellEditWidget(QWidget):
         self._layout.add_layout(self._buttons_layout)
 
     def _update_lists(self):
-        """ Set cell list of sensors and search list of sensors according to DB data """
+        """Set data to 'cell sensor' and 'search' lists."""
         # clear all items
-        self._sensors_search.currentIndexChanged.disconnect(self._add_sensor)  # disable while editing search list
+        self._sensors_search.currentIndexChanged.disconnect(
+            self._add_sensor)  # disable while editing search list
         self._sensors_list.clear()
         self._sensors_search.clear()
 
@@ -108,21 +114,20 @@ class CellEditWidget(QWidget):
         for sensor in cell_sensors:
             sensor_item = QListWidgetItem(str(sensor), self._sensors_list)
             sensor_item.set_tool_tip(f"Short Name: {sensor.short_name}\nName: {sensor.name}\n"
-                                     f"Physical Value: {sensor.physical_value}\nPhysical Unit: {sensor.physical_unit}"
+                                     f"Physical Value: {sensor.physical_value}\n"
+                                     f"Physical Unit: {sensor.physical_unit}"
                                      )
 
-        # get sensors of the configuration that are not added to the cell
+        # get sensors of the configuration that are not in the cell
         unassigned_sensors = self._db_session.query(Sensor) \
             .filter(Sensor.configuration == self._configuration) \
             .except_(
-                self._db_session.query(Sensor)
+            self._db_session.query(Sensor)
                 .join(SensorCell)
                 .filter(SensorCell.cell == self._cell)
             ) \
             .order_by(Sensor.short_name) \
             .all()
-
-        print(unassigned_sensors)
 
         # add found sensors to the search drop list
         for sensor in unassigned_sensors:
@@ -131,27 +136,32 @@ class CellEditWidget(QWidget):
         self._sensors_search.current_index = -1
         self._sensors_search.current_text = ""
 
-        self._sensors_search.currentIndexChanged.connect(self._add_sensor)  # enable when done editing search list
+        self._sensors_search.currentIndexChanged.connect(
+            self._add_sensor)  # enable when done editing search list
 
     def _update_title(self):
-        """ Update cell title in grid representation according to set cell title """
+        """Update cell title in the grid representation."""
         if self._title_line.text != self._cell.title:
             self._cell.title = self._title_line.text
             self.parent_widget().update_cell_title(self._cell)
 
     def _add_sensor(self):
         """ Add the selected sensor to the cell """
-
-        sensor_short_name = self._sensors_search.current_text  # get the short name of the sensor
+        # get the short name of the sensor
+        sensor_short_name = self._sensors_search.current_text
 
         # find the sensor in the DB
-        sensor = self._db_session.query(Sensor).filter(Sensor.configuration == self._configuration) \
-            .filter(Sensor.short_name == sensor_short_name).one_or_none()
+        sensor = self._db_session.query(Sensor) \
+            .filter(Sensor.configuration == self._configuration) \
+            .filter(Sensor.short_name == sensor_short_name) \
+            .one_or_none()
 
         # if sensor not found
         if not sensor:
             # show error message
-            QMessageBox.critical(self, "Error!", "Sensor with such short name does not exist in this configuration!",
+            QMessageBox.critical(self, "Error!",
+                                 "Sensor with such short name does not exist in this "
+                                 "configuration!",
                                  QMessageBox.Ok, QMessageBox.Ok)
 
             self._update_lists()  # clear changes to search combobox
@@ -173,37 +183,44 @@ class CellEditWidget(QWidget):
             .filter(SensorCell.cell == self._cell) \
             .first()
 
-        # if there is a sensor assigned to the cell and its' type differs from the new sensor's type
+        # if there is a sensor assigned to the cell
+        # and its' type differs from the new sensor's type
         if assigned_sensor and (assigned_sensor.physical_value != sensor.physical_value
                                 or assigned_sensor.physical_unit != sensor.physical_unit):
             # show error message
-            QMessageBox.critical(self, "Error!", "Only sensors with the same physical value and units can be "
-                                                 "assigned to the same cell!",
+            QMessageBox.critical(self, "Error!",
+                                 "Only sensors with the same physical value and units can be "
+                                 "assigned to the same cell!",
                                  QMessageBox.Ok, QMessageBox.Ok)
         else:
             # create a SensorCell relationship object
             SensorCell(sensor=sensor, cell=self._cell)
 
             # set cell title
-            if assigned_sensor:  # set title for sensor group
+            if assigned_sensor:
+                # set title for sensor group
                 self._title_line.text = f"{sensor.physical_value} Group"
-                self._title_line.read_only = False  # allow title editing
-            else:  # set title for single sensor
+
+                # allow title editing
+                self._title_line.read_only = False
+            else:
+                # set title for single sensor
                 self._title_line.text = sensor.name
 
         self._update_lists()
 
     def _split_cell(self):
-        """ Split selected cell into atomic (1x1) cells """
+        """Split selected cell into atomic (1x1) cells."""
         self.parent_widget().split_selected_cell()
 
     def _remove_sensor(self):
-        """ Remove sensor from the cell """
+        """Remove sensor from the cell."""
         # get selected items
         selected_items = self._sensors_list.selected_items()
 
         if selected_items:
-            sensor_short_name = selected_items[0].data(0)  # sensor to delete is the first and only selected item
+            # sensor to delete is the first and only selected item
+            sensor_short_name = selected_items[0].data(0)
             # get the sensor that is being removed
             sensor = self._db_session.query(Sensor) \
                 .filter(Sensor.configuration == self._configuration) \
@@ -216,7 +233,7 @@ class CellEditWidget(QWidget):
                 .filter(SensorCell.sensor == sensor) \
                 .one_or_none()
 
-            # remove SensorCell object - remove sensor assignment to the cell
+            # remove sensor assignment to the cell
             if sensor_cell_to_delete:
                 self._db_session.delete(sensor_cell_to_delete)
 

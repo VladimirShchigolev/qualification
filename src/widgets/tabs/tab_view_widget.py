@@ -1,27 +1,31 @@
 from PySide6.QtCore import Qt, QMargins
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, QVBoxLayout, \
-    QMessageBox
+from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, \
+    QVBoxLayout, QMessageBox
+
+# enable snake_case for Pyside6
 # noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
+from __feature__ import snake_case, true_property
 
 from src.widgets.cells.cell_grid_view_widget import CellGridViewWidget
 
 
 class TabViewWidget(QWidget):
-    """ Widget for viewing a certain tab """
+    """Widget for viewing a certain tab."""
 
     def __init__(self, db_session, tab, configuration_page="view"):
+        """Create tab viewing widget"""
         super().__init__()
         self._db_session = db_session
         self._tab = tab
 
-        self._configuration_page = configuration_page  # from what page this page was open (where to return later)
+        # from what page this page was open (where to return later)
+        self._configuration_page = configuration_page
 
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
-        """ Initialize UI """
+        """Initialize UI."""
         # create a layout
         self._layout = QVBoxLayout(self)
 
@@ -69,7 +73,10 @@ class TabViewWidget(QWidget):
 
         self._buttons_layout.add_widget(self._edit_button)
         self._buttons_layout.add_widget(self._delete_button)
-        self._buttons_layout.add_stretch(1)  # move back button to the right
+
+        # move back button to the right
+        self._buttons_layout.add_stretch(1)
+
         self._buttons_layout.add_widget(self._back_button)
 
         # add widgets to layout
@@ -84,11 +91,12 @@ class TabViewWidget(QWidget):
         self._layout.add_layout(self._buttons_layout)
 
     def _delete(self):
-        """ Removes the tab from database """
+        """Removes the tab from database."""
         # ask for confirmation
-        confirmation = QMessageBox.question(self, "Delete",
-                                            f'Are you sure you want to delete tab {self._tab.name}?',
-                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        confirmation = QMessageBox.question(
+            self, "Delete",
+            f'Are you sure you want to delete tab {self._tab.name}?',
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         # if confirmed, remove sensor and redirect to configuration
         if confirmation == QMessageBox.Yes:
@@ -97,11 +105,11 @@ class TabViewWidget(QWidget):
             self._return_to_configuration()
 
     def _edit_tab(self):
-        """ open tab editing page """
+        """Open tab editing page."""
         self.parent_widget().edit_tab(self._tab)
 
     def _return_to_configuration(self):
-        """ Open back the configuration creation/editing/view page """
+        """Open back the configuration creation/editing/view page."""
         if self._configuration_page == "edit":
             self.parent_widget().edit_configuration(self._tab.configuration)
         elif self._configuration_page == "create":

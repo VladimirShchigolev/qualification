@@ -1,27 +1,31 @@
 from PySide6.QtCore import Qt, QMargins, QRegularExpression
 from PySide6.QtGui import QFont, QRegularExpressionValidator
-from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, QVBoxLayout, \
-    QComboBox, QMessageBox
+from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, \
+    QVBoxLayout, QComboBox, QMessageBox
+
+# enable snake_case for Pyside6
 # noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
+from __feature__ import snake_case, true_property
 
 from src.models.models import Sensor
 
 
 class SensorCreateWidget(QWidget):
-    """ Widget for creating a sensor """
+    """Widget for creating a sensor."""
 
     def __init__(self, db_session, configuration, configuration_page="view"):
+        """Create sensor creation page"""
         super().__init__()
         self._db_session = db_session
         self._configuration = configuration
 
-        self._configuration_page = configuration_page  # from what page this page was open (where to return later)
+        # from what page this page was open (where to return later)
+        self._configuration_page = configuration_page
 
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
-        """ Initialize UI """
+        """Initialize UI."""
         # create a layout
         self._layout = QVBoxLayout(self)
 
@@ -39,7 +43,8 @@ class SensorCreateWidget(QWidget):
         # create short name field display
         self._short_name_line = QLineEdit()
 
-        # set validation rules to upper and lower English letters, digits and underscore, 1-10 characters in length
+        # set validation rules to upper and lower English letters,
+        # digits and underscore, 1-10 characters in length
         self._short_name_line.set_validator(
             QRegularExpressionValidator(QRegularExpression(r'[A-Za-z0-9_]{1,10}'))
         )
@@ -54,13 +59,15 @@ class SensorCreateWidget(QWidget):
 
         # create physical value field display
         self._physical_value_line = QComboBox()
-        self._physical_value_line.add_items(  # fill it with widely used options
+        # fill provided values with widely used options
+        self._physical_value_line.add_items(
             sorted(["-", "Temperature", "Voltage", "Resistance", "Electric Current", "Pressure"])
         )
         self._physical_value_line.editable = True
         self._physical_value_line.current_text = ""
 
-        self._physical_value_line.editTextChanged.connect(self._update_units)  # update provided units on value change
+        # update provided units on value change
+        self._physical_value_line.editTextChanged.connect(self._update_units)
 
         # set validation rules to 0-40 characters in length
         self._physical_value_line.set_validator(
@@ -71,7 +78,10 @@ class SensorCreateWidget(QWidget):
         self._physical_unit_line = QComboBox()
         self._physical_unit_line.add_item("-")
         self._physical_unit_line.editable = True
-        self._physical_unit_line.completer().case_sensitivity = Qt.CaseSensitive  # set case sensitive completion
+
+        # set case sensitive completion
+        self._physical_unit_line.completer().case_sensitivity = Qt.CaseSensitive
+
         self._physical_unit_line.current_text = ""
 
         # set validation rules to 0-10 characters in length
@@ -89,7 +99,10 @@ class SensorCreateWidget(QWidget):
         self._cancel_button.clicked.connect(self._return_to_configuration)
 
         self._buttons_layout.add_widget(self._save_button)
-        self._buttons_layout.add_stretch(1)  # move cancel button to the right
+
+        # move cancel button to the right
+        self._buttons_layout.add_stretch(1)
+
         self._buttons_layout.add_widget(self._cancel_button)
 
         # add widgets to layout
@@ -114,11 +127,15 @@ class SensorCreateWidget(QWidget):
             "Pressure": ["mbar", "bar", "Pa", "kPa"],
             "Voltage": ["μV", "mV", "V"],
             "Resistance": ["mΩ", "Ω", "kΩ", "MΩ"],
-            "Electric Current": ["mA", "A"]
+            "Electric Current": ["μA", "mA", "A"]
         }
-        value = self._physical_value_line.current_text  # get chosen value
 
-        current_units = self._physical_unit_line.current_text  # save current units
+        # get chosen value
+        value = self._physical_value_line.current_text
+
+        # save current units
+        current_units = self._physical_unit_line.current_text
+
         self._physical_unit_line.clear()  # clear all units
 
         # add units for chosen value
@@ -127,11 +144,11 @@ class SensorCreateWidget(QWidget):
         else:
             self._physical_unit_line.add_item("-")
 
-        self._physical_unit_line.current_text = current_units  # set to earlier chosen units
+        # set to earlier chosen units
+        self._physical_unit_line.current_text = current_units
 
     def _save(self):
-        """ Create a sensor from data in the form """
-
+        """Create a sensor from data in the form."""
         # get data from the form
         short_name = self._short_name_line.text
         name = self._name_line.text
@@ -141,23 +158,28 @@ class SensorCreateWidget(QWidget):
         # check if data is valid
         validation_passed = False
         try:
-            validation_passed = Sensor.validate(self._configuration, short_name, name, physical_value, physical_unit,
+            validation_passed = Sensor.validate(self._configuration, short_name, name,
+                                                physical_value, physical_unit,
                                                 db_session=self._db_session)
         except ValueError as error:
-            QMessageBox.critical(self, "Error!", str(error), QMessageBox.Ok, QMessageBox.Ok)  # show error message
+            QMessageBox.critical(self, "Error!", str(error), QMessageBox.Ok,
+                                 QMessageBox.Ok)  # show error message
 
         if validation_passed:  # if data is valid
             # create a new sensor object
             sensor = Sensor(configuration=self._configuration, short_name=short_name,
                             name=name, physical_value=physical_value, physical_unit=physical_unit)
 
-            QMessageBox.information(self, "Success!", f'Sensor {sensor.short_name} created successfully!',
-                                    QMessageBox.Ok, QMessageBox.Ok)  # show success message
+            # show success message
+            QMessageBox.information(self, "Success!",
+                                    f'Sensor {sensor.short_name} created successfully!',
+                                    QMessageBox.Ok, QMessageBox.Ok)
 
-            self._return_to_configuration()  # redirect to configuration
+            # redirect to configuration
+            self._return_to_configuration()
 
     def _return_to_configuration(self):
-        """ Open back the configuration creation/editing/view page """
+        """Open back the configuration creation/editing/view page."""
         if self._configuration_page == "edit":
             self.parent_widget().edit_configuration(self._configuration)
         elif self._configuration_page == "create":

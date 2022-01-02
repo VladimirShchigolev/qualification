@@ -1,29 +1,31 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, QLabel, QHBoxLayout, \
-    QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, \
+    QLabel, QHBoxLayout, QPushButton
+
+# enable snake_case for Pyside6
 # noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
+from __feature__ import snake_case, true_property
 
 from src.models.models import Tab
 
 
 class TabIndexWidget(QWidget):
-    """ Widget responsible for showing all tabs belonging to given configuration.
-    Allows searching, showing selected tabs and creating new tabs
-    """
+    """ Widget for showing tabs of the configuration."""
 
     def __init__(self, db_session, configuration, configuration_page="view"):
+        """Create tab index widget."""
         super().__init__()
         self._db_session = db_session
         self._configuration = configuration
 
-        self._configuration_page = configuration_page  # from what page this page was open (where to return later)
+        # from what page this page was open (where to return later)
+        self._configuration_page = configuration_page
 
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
-        """ Initialize UI """
+        """Initialize UI."""
         # create a layout
         self._layout = QVBoxLayout(self)
 
@@ -43,7 +45,8 @@ class TabIndexWidget(QWidget):
         self._tabs_list.alternating_row_colors = True
 
         # get all configuration tabs from DB
-        all_tabs = self._db_session.query(Tab).filter(Tab.configuration == self._configuration).order_by(Tab.name).all()
+        all_tabs = self._db_session.query(Tab).filter(
+            Tab.configuration == self._configuration).order_by(Tab.name).all()
 
         # add tabs to the list widget
         for tab in all_tabs:
@@ -61,7 +64,10 @@ class TabIndexWidget(QWidget):
         self._view_button.clicked.connect(self._show_selected_tab)
 
         self._buttons_layout.add_widget(self._new_button)
-        self._buttons_layout.add_stretch(1)  # move view button to the right
+
+        # move view button to the right
+        self._buttons_layout.add_stretch(1)
+
         self._buttons_layout.add_widget(self._view_button)
 
         # add widgets to layout
@@ -71,12 +77,15 @@ class TabIndexWidget(QWidget):
         self._layout.add_layout(self._buttons_layout)
 
     def _search(self, search_string):
-        """ Filter configuration by the search string """
-
-        # get tabs which name starts with the search_string from current configuration
+        """Filter tab by the search string."""
+        # get tabs which name starts with the
+        # search_string from current configuration
         search_string = "{}%".format(search_string)
-        filtered_tabs = self._db_session.query(Tab).filter(Tab.configuration == self._configuration).filter(
-            Tab.name.like(search_string)).order_by(Tab.name).all()
+        filtered_tabs = self._db_session.query(Tab) \
+            .filter(Tab.configuration == self._configuration) \
+            .filter(Tab.name.like(search_string)) \
+            .order_by(Tab.name) \
+            .all()
 
         # clear current list and fill it with filtered tabs
         self._tabs_list.clear()
@@ -84,23 +93,27 @@ class TabIndexWidget(QWidget):
             QListWidgetItem(str(tab), self._tabs_list)
 
     def _show_selected_tab(self):
-        """ open view page for the selected tab """
+        """Open view page for the selected tab."""
         # get selected items
         selected_items = self._tabs_list.selected_items()
         if selected_items:
-            self._show_list_item_tab(selected_items[0])  # show the first and only item
+            # show the first and only item
+            self._show_list_item_tab(selected_items[0])
 
     def _show_list_item_tab(self, list_item):
-        """ open view page for the selected/clicked tab """
+        """Open view page for the selected/clicked tab."""
         tab_name = list_item.data(0)  # get selected tab short name
 
         # find tab in DB
-        tab = self._db_session.query(Tab).where(Tab.configuration == self._configuration)\
-            .where(Tab.name == tab_name).one_or_none()
+        tab = self._db_session.query(Tab) \
+            .where(Tab.configuration == self._configuration) \
+            .where(Tab.name == tab_name) \
+            .one_or_none()
 
         if tab is not None:  # if tab found
             self.parent_widget().parent_widget().view_tab(tab, self._configuration_page)
 
     def _create_tab(self):
-        """ open a tab creating page """
-        self.parent_widget().parent_widget().create_tab(self._configuration, self._configuration_page)
+        """Open a tab creating page."""
+        self.parent_widget().parent_widget().create_tab(self._configuration,
+                                                        self._configuration_page)

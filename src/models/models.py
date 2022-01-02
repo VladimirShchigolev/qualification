@@ -7,7 +7,7 @@ Base = declarative_base()
 
 
 class Configuration(Base):
-    """ Configuration model """
+    """Configuration model."""
     __tablename__ = 'configuration'
 
     # table fields
@@ -20,20 +20,22 @@ class Configuration(Base):
     active = Column(Boolean, nullable=False, default=False)
 
     def __repr__(self):
-        """ Create string representation of a configuration object """
+        """Create string representation of a configuration object."""
         return f'Configuration({self.name})'
 
     def __str__(self):
-        """ Create a string value of a configuration object"""
+        """Create a string value of a configuration object."""
         return self.name
 
     @staticmethod
     def validate(name, check_for_duplicates=True, db_session=None):
-        """ Check if given fields are valid """
+        """Check if given fields are valid."""
 
         if check_for_duplicates:
-            # check if sensor with such short name exists in this configuration
-            sensor = db_session.query(Configuration).filter(Configuration.name == name).one_or_none()
+            # check if sensor with such short name
+            # exists in this configuration
+            sensor = db_session.query(Configuration).filter(
+                Configuration.name == name).one_or_none()
             if sensor:
                 raise ValueError("A configuration with such short name already exists!")
 
@@ -45,7 +47,7 @@ class Configuration(Base):
 
 
 class SensorCell(Base):
-    """ Cell and Sensors NxM relationship model """
+    """Cell and Sensors NxM relationship model."""
     __tablename__ = 'sensor_cell'
 
     # table fields
@@ -54,21 +56,22 @@ class SensorCell(Base):
     cell_id = Column(Integer, ForeignKey('cell.id', ondelete='CASCADE'), nullable=False)
 
     def __repr__(self):
-        """ Create string representation of a CellSensor object """
+        """Create string representation of a CellSensor object."""
         return f'CellSensor({self.sensor_id}, {self.cell_id})'
 
     def __str__(self):
-        """" Create string value of a CellSensor object """
+        """"Create string value of a CellSensor object."""
         return f'CellSensor({self.sensor_id}, {self.cell_id})'
 
 
 class Sensor(Base):
-    """ Sensor model """
+    """Sensor model."""
     __tablename__ = 'sensor'
 
     # table fields
     id = Column(Integer, primary_key=True)
-    configuration_id = Column(Integer, ForeignKey('configuration.id', ondelete='CASCADE'), nullable=False)
+    configuration_id = Column(Integer, ForeignKey('configuration.id', ondelete='CASCADE'),
+                              nullable=False)
     short_name = Column(String, nullable=False)
     name = Column(String, nullable=False)
     physical_value = Column(String, nullable=False)
@@ -78,17 +81,18 @@ class Sensor(Base):
     cell_sensors = relationship("SensorCell", cascade="all,delete", back_populates="sensor")
 
     def __repr__(self):
-        """ Create string representation of a sensor object """
+        """Create string representation of a sensor object."""
         return f'Sensor({self.short_name}, {self.name}, {self.physical_unit})'
 
     def __str__(self):
-        """ Create a string value of a sensor object"""
+        """Create a string value of a sensor object."""
         return self.short_name
 
     @staticmethod
-    def validate(configuration, short_name, name, physical_value, physical_unit, check_for_duplicates=True,
+    def validate(configuration, short_name, name, physical_value, physical_unit,
+                 check_for_duplicates=True,
                  db_session=None):
-        """ Check if given fields are valid """
+        """Check if given fields are valid."""
 
         # short name length
         if not 1 <= len(short_name) <= 10:
@@ -96,14 +100,18 @@ class Sensor(Base):
 
         # short name characters
         if not re.match("^[a-zA-Z0-9_]+$", short_name):
-            raise ValueError("Short name should consist of upper and lower English letters, digits and underscores!")
+            raise ValueError(
+                "Short name should consist of upper and lower English letters, digits and "
+                "underscores!")
 
         if check_for_duplicates:
-            # check if sensor with such short name exists in this configuration
+            # check if sensor with such
+            # short name exists in this configuration
             sensor = db_session.query(Sensor).filter(Sensor.configuration == configuration) \
                 .filter(Sensor.short_name == short_name).one_or_none()
             if sensor:
-                raise ValueError("A sensor with such short name already exists in this configuration!")
+                raise ValueError(
+                    "A sensor with such short name already exists in this configuration!")
 
         # name length
         if not 1 <= len(name) <= 30:
@@ -125,12 +133,13 @@ Configuration.sensors = relationship("Sensor", cascade="all,delete", order_by=Se
 
 
 class Tab(Base):
-    """ Tab model """
+    """Tab model."""
     __tablename__ = 'tab'
 
     # table fields
     id = Column(Integer, primary_key=True)
-    configuration_id = Column(Integer, ForeignKey('configuration.id', ondelete='CASCADE'), nullable=False)
+    configuration_id = Column(Integer, ForeignKey('configuration.id', ondelete='CASCADE'),
+                              nullable=False)
     name = Column(String, nullable=False)
     grid_width = Column(Integer, nullable=False, default=2)
     grid_height = Column(Integer, nullable=False, default=5)
@@ -138,19 +147,20 @@ class Tab(Base):
     configuration = relationship("Configuration", back_populates="tabs")
 
     def __repr__(self):
-        """ Create string representation of a tab object """
+        """Create string representation of a tab object."""
         return f'Tab({self.name})'
 
     def __str__(self):
-        """ Create a string value of a tab object """
+        """Create a string value of a tab object."""
         return self.name
 
     @staticmethod
-    def validate(configuration, name, grid_width, grid_height, check_for_duplicates=True, db_session=None):
-        """ Check if given fields are valid """
+    def validate(configuration, name, grid_width, grid_height, check_for_duplicates=True,
+                 db_session=None):
+        """Check if given fields are valid."""
 
         if check_for_duplicates:
-            # check if a tab with such name exists in this configuration
+            # check if a tab with such name exists in the configuration
             tab = db_session.query(Tab).filter(Tab.configuration == configuration) \
                 .filter(Tab.name == name).one_or_none()
             if tab:
@@ -174,11 +184,12 @@ class Tab(Base):
         return True
 
 
-Configuration.tabs = relationship("Tab", cascade="all,delete", order_by=Tab.name, back_populates="configuration")
+Configuration.tabs = relationship("Tab", cascade="all,delete", order_by=Tab.name,
+                                  back_populates="configuration")
 
 
 class Cell(Base):
-    """ Cell model """
+    """Cell model."""
     __tablename__ = 'cell'
 
     # table fields
@@ -194,11 +205,11 @@ class Cell(Base):
     cell_sensors = relationship("SensorCell", cascade="all,delete", back_populates="cell")
 
     def __repr__(self):
-        """ Create string representation of a cell object """
+        """Create string representation of a cell object."""
         return f'Cell({self.row}, {self.column})'
 
     def __str__(self):
-        """ Create a string value of a cell object """
+        """Create a string value of a cell object."""
         return f'Cell({self.row}, {self.column})'
 
 

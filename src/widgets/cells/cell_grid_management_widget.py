@@ -1,17 +1,19 @@
-from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QScrollArea, QGridLayout, QSizePolicy, QMessageBox
+from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QScrollArea, QGridLayout, \
+    QSizePolicy, QMessageBox
+
+# enable snake_case for Pyside6
 # noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
+from __feature__ import snake_case, true_property
 
 from src.models.models import Cell, SensorCell
 from src.widgets.cells.cell_edit_widget import CellEditWidget
 
 
 class CellGridManagementWidget(QWidget):
-    """ Widget responsible for showing all cells belonging to a given tab.
-    Allows selecting cells and editing them - merging and splitting cells, adding sensors to the cells.
-    """
+    """Widget responsible for showing all cells belonging to a tab."""
 
     def __init__(self, db_session, tab):
+        """Create grid management widget."""
         super().__init__()
         self._db_session = db_session
         self._tab = tab
@@ -23,7 +25,7 @@ class CellGridManagementWidget(QWidget):
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
-        """ Initialize UI """
+        """Initialize UI."""
         # create a layout
         self._layout = QHBoxLayout(self)
 
@@ -46,25 +48,22 @@ class CellGridManagementWidget(QWidget):
         self._layout.add_widget(self._right_widget)
 
     def update_grid(self):
-        """ Update grid representation. """
-
+        """Update grid representation."""
         self._clear_grid()  # clear the grid
         self._fill_grid()  # and fill it according to DB session data
 
     def _clear_grid(self):
-        """ Delete all elements from grid layout. """
+        """Delete all elements from grid layout."""
         self._cells.clear()
         self._selected_cells = set()
         for i in range(self._grid_layout.count() - 1, -1, -1):
             self._grid_layout.take_at(i).widget().delete_later()
 
     def _fill_grid(self):
-        """ Fill grid with cells """
+        """Fill grid with cells."""
 
         cells = self._db_session.query(Cell).filter(Cell.tab == self._tab) \
             .order_by(Cell.row).order_by(Cell.column).all()
-
-        print(cells)
 
         for cell in cells:
             cell_button = QPushButton()
@@ -75,12 +74,14 @@ class CellGridManagementWidget(QWidget):
             cell_button.size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             cell_button.minimum_height = 40
             cell_button.minimum_width = 80
-            self._grid_layout.add_widget(cell_button, cell.row, cell.column, cell.rowspan, cell.colspan)
+            self._grid_layout.add_widget(cell_button, cell.row, cell.column, cell.rowspan,
+                                         cell.colspan)
 
             # add cell selection management on button click
             cell_button.toggled.connect(
                 (
-                    lambda cell_row, cell_column: lambda: self._press_cell_button(cell_row, cell_column)
+                    lambda cell_row, cell_column: lambda: self._press_cell_button(cell_row,
+                                                                                  cell_column)
                 )(cell.row, cell.column)
             )
 
@@ -92,25 +93,29 @@ class CellGridManagementWidget(QWidget):
             self._grid_layout.set_column_stretch(column, 1)
 
     def _press_cell_button(self, row, column):
-        """ Manages cell selection when pressing cell buttons """
+        """Manages cell selection when pressing cell buttons."""
 
-        # enable (if not enabled) or disable (if enabled) cell selection
+        # enable (if not enabled) or disable (otherwise) cell selection
         if (row, column) in self._selected_cells:
             self._selected_cells.remove((row, column))
         else:
             self._selected_cells.add((row, column))
 
         # set right widget according to selected cells
-        self._layout.remove_widget(self._right_widget)  # remove old widget
+
+        # remove old widget
+        self._layout.remove_widget(self._right_widget)
         self._right_widget.deleteLater()
 
         if len(self._selected_cells) == 0:  # if no cells selected
             # set a placeholder widget
             self._right_widget = QWidget()
 
-        elif len(self._selected_cells) == 1:  # if exactly one cell is selected
-            # set a cell editing widget
-            row, column = next(iter(self._selected_cells))  # get selected cell's coordinates
+        elif len(self._selected_cells) == 1:
+            # if exactly one cell is selected set a cell editing widget
+
+            # get selected cell's coordinates
+            row, column = next(iter(self._selected_cells))
             self._right_widget = CellEditWidget(self._db_session, self._cells[(row, column)][1])
         else:
             # set a cell merging widget
@@ -120,7 +125,7 @@ class CellGridManagementWidget(QWidget):
         self._layout.add_widget(self._right_widget)
 
     def _set_cell_merging_widget(self):
-        """ Set right widget to cell merging widget """
+        """Set right widget to cell merging widget."""
         self._right_widget = QWidget()
         inner_layout = QHBoxLayout(self._right_widget)
 
@@ -131,23 +136,22 @@ class CellGridManagementWidget(QWidget):
         self._merge_button.clicked.connect(self._merge_selected_cells)
 
     def _merge_selected_cells(self):
-        """ Merge selected cells if they are forming a rectangle """
+        """Merge selected cells if they are forming a rectangle."""
 
         def is_rectangular_selection(selected_cells, all_cells, grid_size):
-            """ Check if selected cells form a rectangle """
+            """Check if selected cells form a rectangle."""
             # create empty grid selection
             grid = [[False for column in range(grid_size[1])] for row in range(grid_size[0])]
 
             def fill_cell(row, column, rowspan, colspan):
-                """ Fill atomic cells (1x1) of a given cell (N x M) as selected """
+                """Fill grid with selected cells as atomic cells."""
                 for i in range(row, row + rowspan):
                     for j in range(column, column + colspan):
                         grid[i][j] = True
 
             def is_spanning_rectangle(grid, upper_left_cell, lower_right_cell):
-                """ Check if selected cells of the grid create a rectangle
-                with given left upper and right lower corners"""
-
+                """Check if selected cells create a rectangle
+                with given left upper and right lower corners."""
                 spanning_rectangle = True
                 for row in range(len(grid)):
                     for column in range(len(grid[0])):
@@ -155,13 +159,25 @@ class CellGridManagementWidget(QWidget):
                         if upper_left_cell[0] <= row <= lower_right_cell[0] \
                                 and upper_left_cell[1] <= column <= lower_right_cell[1]:
 
-                            spanning_rectangle &= grid[row][column]  # it should be marked as selected
+                            # it should be marked as selected
+                            # otherwise it's not a spanning rectangle
+                            if not grid[row][column]:
+                                spanning_rectangle = False
+                                break
                         else:  # if it's outside the spanning rectangle
-                            spanning_rectangle &= not grid[row][column]  # it should be marked as not selected
-                # if contradiction was found, selection does not form a rectangle
+                            # it should be marked as not selected
+                            # otherwise it's not a spanning rectangle
+                            if grid[row][column]:
+                                spanning_rectangle = False
+                                break
+
+                    if not spanning_rectangle:
+                        break  # stop if contradiction was found
+
                 return spanning_rectangle
 
-            # fill the grid of atomic cells (1 x 1) - are these cells in selection or not
+            # fill the grid of atomic cells (1 x 1) -
+            # are these cells in selection or not
             for cell_position in selected_cells:
                 cell = all_cells[cell_position][1]
                 fill_cell(cell.row, cell.column, cell.rowspan, cell.colspan)
@@ -176,29 +192,32 @@ class CellGridManagementWidget(QWidget):
                 cell = self._cells[cell_position][1]
                 # append lower right corner of each cell
                 lower_right_corners.append((cell.row + cell.rowspan, cell.column + cell.colspan))
-            lower_right_corners.sort()
-            lower_right_cell = lower_right_corners[-1]  # corner by 1 further from selection in each direction
-            lower_right_cell = lower_right_cell[0] - 1, lower_right_cell[1] - 1  # selected corner
 
-            print(grid)
-            print(upper_left_cell, lower_right_cell)
+            lower_right_corners.sort()
+
+            # corner by 1 further from selection in each direction
+            lower_right_cell = lower_right_corners[-1]
+
+            # selected corner
+            lower_right_cell = lower_right_cell[0] - 1, lower_right_cell[1] - 1
 
             return is_spanning_rectangle(grid, upper_left_cell, lower_right_cell)
 
         if len(self._selected_cells) < 2:
             # show error message
-            QMessageBox.critical(self, "Error!", "Can merge only two or more cells", QMessageBox.Ok, QMessageBox.Ok)
+            QMessageBox.critical(self, "Error!", "Can merge only two or more cells",
+                                 QMessageBox.Ok, QMessageBox.Ok)
             return
 
-        if is_rectangular_selection(self._selected_cells, self._cells, (self._tab.grid_height, self._tab.grid_width)):
+        if is_rectangular_selection(self._selected_cells, self._cells,
+                                    (self._tab.grid_height, self._tab.grid_width)):
             self._merge_cell_rectangle()
         else:
             QMessageBox.critical(self, "Error!", "Can merge only cells that form a rectangle",
                                  QMessageBox.Ok, QMessageBox.Ok)
 
     def _merge_cell_rectangle(self):
-        """ Merge selected cells (that form a rectangle) into one cell """
-
+        """Merge selected rectangle of cells into one cell."""
         selected_cells = sorted(self._selected_cells)
 
         # select a cell to be the one after merging (main cell)
@@ -209,11 +228,12 @@ class CellGridManagementWidget(QWidget):
                 .filter(SensorCell.cell == cell) \
                 .first()
 
-            # set the most upper left cell with sensors as the main cell
+            # set the upper left cell with sensors as the main cell
             if has_sensor_assigned:
                 main_cell = cell
                 break
-        else:  # if no such main cell is found, set left upper selected cell to be main cell
+        else:  # if no such main cell is found,
+            # set left upper selected cell to be main cell
             main_cell = self._cells[selected_cells[0]][1]
 
         # calculate new (main) cell coordinates and span
@@ -251,28 +271,34 @@ class CellGridManagementWidget(QWidget):
         self._cells[main_cell.row, main_cell.column][0].toggle()
 
     def split_selected_cell(self):
-        """ Split selected cell into atomic (1x1) cells """
+        """Split selected cell into atomic (1x1) cells."""
 
         # check if only one cell is selected
         if len(self._selected_cells) > 1:
             # show error message
-            QMessageBox.critical(self, "Error!", "Can split only one cells!", QMessageBox.Ok, QMessageBox.Ok)
+            QMessageBox.critical(self, "Error!", "Can split only one cells!", QMessageBox.Ok,
+                                 QMessageBox.Ok)
             return
 
         # check if selected cell can be split (is not atomic 1x1 cell)
-        cell = self._cells[next(iter(self._selected_cells))][1]  # get the only selected cell
+
+        # get the only selected cell
+        cell = self._cells[next(iter(self._selected_cells))][1]
+
         if cell.rowspan == 1 and cell.colspan == 1:
             # show error message
-            QMessageBox.critical(self, "Error!", "This cell cannot be split!", QMessageBox.Ok, QMessageBox.Ok)
+            QMessageBox.critical(self, "Error!", "This cell cannot be split!", QMessageBox.Ok,
+                                 QMessageBox.Ok)
             return
 
         # create all others atomic cells
         for row in range(cell.row, cell.row + cell.rowspan):
             for column in range(cell.column, cell.column + cell.colspan):
                 if row != cell.row or column != cell.column:
-                    Cell(tab=self._tab, row=row, column=column)  # create atomic cell
+                    # create an atomic cell
+                    Cell(tab=self._tab, row=row, column=column)
 
-        # set splitted cells (now - upper left cell) rowspan and colspan to 1
+        # set upper left cell's rowspan and colspan to 1
         cell.rowspan = 1
         cell.colspan = 1
 
@@ -282,5 +308,5 @@ class CellGridManagementWidget(QWidget):
         self.update_grid()
 
     def update_cell_title(self, cell):
-        """ Update cell title in it's grid representation """
+        """Update cell title in it's grid representation."""
         self._cells[cell.row, cell.column][0].text = cell.title

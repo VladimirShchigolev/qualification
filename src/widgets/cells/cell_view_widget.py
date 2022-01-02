@@ -1,18 +1,19 @@
 from PySide6.QtCore import QMargins
 from PySide6.QtWidgets import QWidget, QVBoxLayout, \
     QLineEdit, QListWidget, QListWidgetItem, QLabel
+
+# enable snake_case for Pyside6
 # noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
+from __feature__ import snake_case, true_property
 
 from src.models.models import Sensor, SensorCell
 
 
 class CellViewWidget(QWidget):
-    """ Widget responsible for viewing a cell.
-    Shows all sensors assigned to the cell.
-    """
+    """ Widget responsible for viewing a cell."""
 
     def __init__(self, db_session, cell):
+        """Create cell view widget."""
         super().__init__()
         self._db_session = db_session
         self._cell = cell
@@ -21,7 +22,7 @@ class CellViewWidget(QWidget):
         self._init_ui()  # initialize UI
 
     def _init_ui(self):
-        """ Initialize UI """
+        """Initialize UI."""
         self.maximum_width = 250
         # create a layout
         self._layout = QVBoxLayout(self)
@@ -50,7 +51,8 @@ class CellViewWidget(QWidget):
         for sensor in cell_sensors:
             sensor_item = QListWidgetItem(str(sensor), self._sensors_list)
             sensor_item.set_tool_tip(f"Short Name: {sensor.short_name}\nName: {sensor.name}\n"
-                                     f"Physical Value: {sensor.physical_value}\nPhysical Unit: {sensor.physical_unit}"
+                                     f"Physical Value: {sensor.physical_value}\n"
+                                     f"Physical Unit: {sensor.physical_unit}"
                                      )
 
         # add widgets to layout
