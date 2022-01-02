@@ -272,7 +272,6 @@ class CellGridManagementWidget(QWidget):
 
     def split_selected_cell(self):
         """Split selected cell into atomic (1x1) cells."""
-
         # check if only one cell is selected
         if len(self._selected_cells) > 1:
             # show error message

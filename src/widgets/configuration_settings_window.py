@@ -10,8 +10,7 @@ from src.widgets.configuration.configuration_create_edit_widget import \
 from src.widgets.configuration.configuration_create_widget import ConfigurationCreateWidget
 from src.widgets.configuration.configuration_index_widget import ConfigurationIndexWidget
 from src.widgets.configuration.configuration_view_widget import ConfigurationViewWidget
-from src.widgets.sensors.sensor_create_widget import SensorCreateWidget
-from src.widgets.sensors.sensor_edit_widget import SensorEditWidget
+from src.widgets.sensors.sensor_create_edit_widget import SensorCreateEditWidget
 from src.widgets.sensors.sensor_view_widget import SensorViewWidget
 from src.widgets.tabs.tab_create_edit_widget import TabCreateEditWidget
 from src.widgets.tabs.tab_view_widget import TabViewWidget
@@ -90,8 +89,8 @@ class ConfigurationSettingsWindow(QWidget):
 
         # open sensor creation;
         # set central widget to sensor create widget
-        self._widget = SensorCreateWidget(self._db_session, configuration,
-                                          configuration_page=configuration_page)
+        self._widget = SensorCreateEditWidget(self._db_session, configuration=configuration,
+                                              configuration_page=configuration_page)
         self._layout.add_widget(self._widget)
 
     def view_sensor(self, sensor, configuration_page="view"):
@@ -109,8 +108,8 @@ class ConfigurationSettingsWindow(QWidget):
         self._clear_window()
 
         # open editing page; set central widget to sensor edit widget
-        self._widget = SensorEditWidget(self._db_session, sensor,
-                                        configuration_page=configuration_page)
+        self._widget = SensorCreateEditWidget(self._db_session, sensor=sensor,
+                                              configuration_page=configuration_page)
         self._layout.add_widget(self._widget)
 
     def create_tab(self, configuration, configuration_page="view"):
