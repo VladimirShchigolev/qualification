@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout
 from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
 
 from src.widgets.configuration.configuration_create_edit_widget import ConfigurationCreateEditWidget
+from src.widgets.configuration.configuration_create_widget import ConfigurationCreateWidget
 from src.widgets.configuration.configuration_index_widget import ConfigurationIndexWidget
 from src.widgets.configuration.configuration_view_widget import ConfigurationViewWidget
 from src.widgets.sensors.sensor_create_widget import SensorCreateWidget
@@ -42,7 +43,15 @@ class ConfigurationSettingsWindow(QWidget):
     def _clear_window(self):
         """ Clear window (remove current central widget) """
         self._layout.remove_widget(self._widget)
-        self._widget.deleteLater()
+        self._widget.delete_later()
+
+    def create_configuration(self, configuration=None):
+        """ open configuration editing page """
+        self._clear_window()
+
+        # open editing page; set central widget to sensor edit widget
+        self._widget = ConfigurationCreateWidget(self._db_session, configuration)
+        self._layout.add_widget(self._widget)
 
     def view_configuration(self, configuration):
         """ Show the given configuration """

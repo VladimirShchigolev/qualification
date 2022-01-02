@@ -55,6 +55,7 @@ class ConfigurationIndexWidget(QWidget):
         self._buttons_layout = QHBoxLayout()
 
         self._new_button = QPushButton("New")
+        self._new_button.clicked.connect(self._create_configuration)
         self._load_button = QPushButton("Load")
         self._view_button = QPushButton("View")
         self._view_button.clicked.connect(self._show_selected_configuration)
@@ -85,6 +86,10 @@ class ConfigurationIndexWidget(QWidget):
         self._configurations_list.clear()
         for configuration in filtered_configurations:
             QListWidgetItem(str(configuration), self._configurations_list)
+
+    def _create_configuration(self):
+        """ Open configuration creation page """
+        self.parent_widget().create_configuration()
 
     def _show_selected_configuration(self):
         """ open view page for the selected configuration """

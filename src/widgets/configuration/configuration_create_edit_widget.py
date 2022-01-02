@@ -21,14 +21,20 @@ class ConfigurationCreateEditWidget(QWidget):
         # set to true if returned to the creation page after creating/editing sensors or tabs
         self._returned_to_creation = returned_to_creation
 
+        print("configuration:", configuration)
+
         # define if configuration is being created or edited
         if configuration:
             self._configuration = configuration
             self._edit_mode = True
         else:
             # create a new configuration to edit it later
-            self._configuration = Configuration(name="")
+            print("configuration created")
+            self._configuration = Configuration(name="", show_unknown_sensors=False)
+            self._db_session.add(self._configuration)
             self._edit_mode = False
+
+        print("created: ", self._configuration.id)
 
         self._init_ui()  # initialize UI
 
@@ -43,13 +49,14 @@ class ConfigurationCreateEditWidget(QWidget):
         self._form_layout.contents_margins = QMargins(10, 0, 10, 0)
 
         # create a title
-        self._title = QLabel()
         if self._edit_mode and not self._returned_to_creation:
+            self._title = QLabel()
             self._title.text = f'Edit Configuration {self._configuration.name}'
+            self._title.font = QFont("Lato", 18)
+            self._title.alignment = Qt.AlignCenter
+            self._title.set_contents_margins(10, 10, 10, 20)
 
-        self._title.font = QFont("Lato", 18)
-        self._title.alignment = Qt.AlignCenter
-        self._title.set_contents_margins(10, 10, 10, 20)
+            self._form_layout.add_row(self._title)
 
         # create name field display
         self._name_line = QLineEdit()
@@ -59,9 +66,12 @@ class ConfigurationCreateEditWidget(QWidget):
         self._name_line.set_validator(
             QRegularExpressionValidator(QRegularExpression(r'.{1,30}'))
         )
+        self._name_line.textChanged.connect(self._update_name)
 
-        self._include_unknown_sensor_tab = QCheckBox()
-        self._include_unknown_sensor_tab.checked = self._configuration.show_unknown_sensors
+        self._show_unknown_sensors = QCheckBox()
+        print("check: ", self._configuration.show_unknown_sensors)
+        self._show_unknown_sensors.checked = self._configuration.show_unknown_sensors
+        self._show_unknown_sensors.clicked.connect(self._update_showing_unknown_sensors)
 
         # create sensors and tabs display
         if self._edit_mode and not self._returned_to_creation:
@@ -91,21 +101,30 @@ class ConfigurationCreateEditWidget(QWidget):
         self._buttons_layout.add_widget(self._cancel_button)
 
         # add widgets to layout
-        self._form_layout.add_row(self._title)
         self._form_layout.add_row("Name:", self._name_line)
-        self._form_layout.add_row("Include Unknown sensors tab:", self._include_unknown_sensor_tab)
+        self._form_layout.add_row("Show unknown sensors:", self._show_unknown_sensors)
         self._layout.add_layout(self._form_layout)
         self._layout.add_layout(self._sensors_and_tabs_layout)
 
         # add buttons
         self._layout.add_layout(self._buttons_layout)
 
+    def _update_name(self):
+        """ Updates configuration name when it changes """
+        name = self._name_line.text
+        self._configuration.name = name
+
+    def _update_showing_unknown_sensors(self):
+        """ Updates option of showing unknown sensors when it changes """
+        show = self._show_unknown_sensors.checked
+        self._configuration.show_unknown_sensors = show
+
     def _save(self):
         """ Save configuration from data in the form """
 
         # get data from the form
         name = self._name_line.text
-        include_unknown_sensor_tab = self._include_unknown_sensor_tab.checked
+        include_unknown_sensor_tab = self._show_unknown_sensors.checked
 
         # determine if check for duplicates is needed
         check_for_duplicates = name != self._configuration.name  # needed only when configuration name gets changed
@@ -137,7 +156,7 @@ class ConfigurationCreateEditWidget(QWidget):
             self._return_to_configurations()  # redirect to configuration index
 
     def _cancel(self):
-        """ revert changes and open back the configuration creation/editing page """
+        """ Revert changes and open back the configuration index/view page """
 
         # revert changes
         self._db_session.rollback()

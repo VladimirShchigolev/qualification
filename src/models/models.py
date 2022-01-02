@@ -13,10 +13,10 @@ class Configuration(Base):
     # table fields
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    show_unknown_sensors = Column(Boolean, nullable=False)
-    show_model = Column(Boolean, nullable=False)
-    model_chamber_text = Column(String)
-    model_control_text = Column(String)
+    show_unknown_sensors = Column(Boolean, nullable=False, default=False)
+    show_model = Column(Boolean, nullable=False, default=False)
+    model_chamber_text = Column(String, nullable=True, default=None)
+    model_control_text = Column(String, nullable=True, default=None)
     active = Column(Boolean, nullable=False, default=False)
 
     def __repr__(self):
@@ -35,7 +35,7 @@ class Configuration(Base):
             # check if sensor with such short name exists in this configuration
             sensor = db_session.query(Configuration).filter(Configuration.name == name).one_or_none()
             if sensor:
-                raise ValueError("A sensor with such short name already exists in this configuration")
+                raise ValueError("A configuration with such short name already exists!")
 
         # name length
         if not 1 <= len(name) <= 30:
@@ -103,7 +103,7 @@ class Sensor(Base):
             sensor = db_session.query(Sensor).filter(Sensor.configuration == configuration) \
                 .filter(Sensor.short_name == short_name).one_or_none()
             if sensor:
-                raise ValueError("A sensor with such short name already exists in this configuration")
+                raise ValueError("A sensor with such short name already exists in this configuration!")
 
         # name length
         if not 1 <= len(name) <= 30:
@@ -154,7 +154,7 @@ class Tab(Base):
             tab = db_session.query(Tab).filter(Tab.configuration == configuration) \
                 .filter(Tab.name == name).one_or_none()
             if tab:
-                raise ValueError("A tab with such name already exists in this configuration")
+                raise ValueError("A tab with such name already exists in this configuration!")
 
         # name length
         if not 1 <= len(name) <= 30:
