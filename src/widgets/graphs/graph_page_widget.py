@@ -4,6 +4,8 @@ from PySide6.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QScrollArea, QS
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property
 
+from src.widgets.graphs.graph_widget import GraphWidget
+
 
 class GraphPageWidget(QWidget):
     """Visual representation of a tab."""
@@ -34,7 +36,7 @@ class GraphPageWidget(QWidget):
     def _fill_grid(self):
         """Fill grid with graph widgets."""
         for cell in self._tab.cells:
-            widget = QWidget()
+            widget = GraphWidget(cell)
             widget.size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             widget.minimum_height = 150
             widget.minimum_width = 300
