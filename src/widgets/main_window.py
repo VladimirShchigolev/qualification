@@ -9,6 +9,7 @@ from __feature__ import snake_case, true_property
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import Configuration
+from src.widgets.configuration_settings_window import ConfigurationSettingsWindow
 from src.widgets.graphs.graph_tab_widget import GraphTabWidget
 
 
@@ -75,7 +76,7 @@ class MainWindow(QMainWindow):
         # self.actionNew.triggered.connect(self.start_new_session)
         # self.actionOpen.triggered.connect(self.open_record)
         # self.actionRecord.triggered.connect(self.record)
-        # self.actionSettings.triggered.connect(self.open_settings)
+        self._action_configurations.triggered.connect(self._open_configurations)
 
         self._tabs = QWidget()
         self.set_central_widget(self._tabs)
@@ -107,6 +108,13 @@ class MainWindow(QMainWindow):
             self._init_visualization(configuration)
 
         db_session.close()
+
+    def _open_configurations(self):
+        """Open configuration settings window."""
+
+        self._configurations_window = ConfigurationSettingsWindow(self._session_maker)
+        self._configurations_window.show()
+        print("lol")
 
     def close_event(self, event):
         """Finish work with resources before closing"""

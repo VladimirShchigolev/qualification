@@ -5,7 +5,7 @@ class GraphWidget(PlotWidget):
     """Widget for sensor measurement graphs."""
 
     def __init__(self, cell):
-        """Create graph widget"""
+        """Create graph widget."""
         super().__init__()
 
         self._cell = cell
@@ -27,7 +27,7 @@ class GraphWidget(PlotWidget):
             self._y[sensor.short_name] = []
 
     def update_data(self, x, y, line=""):
-        """Add a point to the graph"""
+        """Add a point to the graph."""
         if line in self._data_lines:
             self._x[line].append(x)
             self._y[line].append(y)

@@ -19,10 +19,10 @@ from src.widgets.tabs.tab_view_widget import TabViewWidget
 class ConfigurationSettingsWindow(QWidget):
     """Window for all configurations settings."""
 
-    def __init__(self, db_session):
+    def __init__(self, session_maker):
         """Create configuration settings window."""
         super().__init__()
-        self._db_session = db_session
+        self._db_session = session_maker()
 
         # set window title and size
         self.window_title = "Configurations"
@@ -138,3 +138,8 @@ class ConfigurationSettingsWindow(QWidget):
         self._widget = TabCreateEditWidget(self._db_session, tab=tab,
                                            configuration_page=configuration_page)
         self._layout.add_widget(self._widget)
+
+    def close_event(self, event):
+        """Finish working with resources before closing."""
+        self._db_session.close()
+        event.accept()
