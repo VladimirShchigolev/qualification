@@ -45,6 +45,12 @@ class Configuration(Base):
 
         return True
 
+    @staticmethod
+    def load(db_session):
+        """Load active configuration from"""
+        configuration = db_session.query(Configuration).filter(Configuration.active == True).one_or_none()
+        return configuration
+
 
 class SensorCell(Base):
     """Cell and Sensors NxM relationship model."""

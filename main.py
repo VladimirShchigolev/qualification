@@ -16,16 +16,14 @@ def main():
     # connect to the database
     engine = create_engine('sqlite:///configurations.db')
     session_cls = sessionmaker(bind=engine)
-    db_session = session_cls()
 
     app = QApplication([])
     app.set_font(QFont("Lato", 12, QFont.Normal))
 
-    window = MainWindow()
+    window = MainWindow(session_cls)
     window.show()
 
     app.exec()
-    db_session.close()
 
 
 if __name__ == '__main__':

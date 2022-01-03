@@ -9,7 +9,7 @@ def create_tables(database):
     throws sqlite3.Error exception
     """
     # create SQL codes for table creation
-    sql_create_configuration_table = """CREATE TABLE IF NOT EXISTS configuration (
+    sql_create_configuration_table = """CREATE TABLE IF NOT EXISTS configurations (
                                              id integer PRIMARY KEY,
                                              name text NOT NULL UNIQUE,
                                              show_unknown_sensors integer NOT NULL DEFAULT 0,
@@ -26,7 +26,7 @@ def create_tables(database):
                                       name text NOT NULL,
                                       physical_value text NOT NULL,
                                       physical_unit text NOT NULL,
-                                      FOREIGN KEY (configuration_id) REFERENCES configuration (id) ON DELETE CASCADE
+                                      FOREIGN KEY (configuration_id) REFERENCES configurations (id) ON DELETE CASCADE
                                   );"""
 
     sql_create_tab_table = """CREATE TABLE IF NOT EXISTS tab (
@@ -35,7 +35,7 @@ def create_tables(database):
                                   name text NOT NULL,
                                   grid_width integer NOT NULL DEFAULT 2,
                                   grid_height integer NOT NULL DEFAULT 5,
-                                  FOREIGN KEY (configuration_id) REFERENCES configuration (id) 
+                                  FOREIGN KEY (configuration_id) REFERENCES configurations (id) 
                                                                  ON DELETE CASCADE
                               );"""
 
@@ -78,23 +78,23 @@ def create_tables(database):
 
 
 def insert_default(database):
-    """ Insert default configuration values if they don't exist
+    """ Insert default configurations values if they don't exist
     :parameter database: Database connection object
     :return: None
     throws sqlite3.Error exception
     """
 
-    # check if default configuration exists
+    # check if default configurations exists
     cursor = database.cursor()
-    cursor.execute("SELECT id FROM configuration WHERE name='Default'")
+    cursor.execute("SELECT id FROM configurations WHERE name='Default'")
     rows = cursor.fetchall()
 
-    if len(rows) == 0:  # Default configuration doesn't exist
-        # insert default configuration and unknown sensor tab for the configuration
-        cursor.execute("""INSERT INTO configuration
+    if len(rows) == 0:  # Default configurations doesn't exist
+        # insert default configurations and unknown sensor tab for the configurations
+        cursor.execute("""INSERT INTO configurations
                           VALUES (NULL, 'Default', 1, 0, NULL, NULL, 1);""")
 
-        configuration_id = cursor.lastrowid  # id of the default configuration
+        configuration_id = cursor.lastrowid  # id of the default configurations
         cursor.execute("""INSERT INTO tab
                           VALUES (NULL, ?, 'Unknown', 5, 20);""", (configuration_id,))
 
@@ -117,7 +117,7 @@ def insert_default(database):
 
 
 def main():
-    """ Create the configuration database, its tables and add the default configuration """
+    """ Create the configurations database, its tables and add the default configurations """
     # create a new database
     database = None
     try:
@@ -134,7 +134,7 @@ def main():
         database.close()  # in case of an error close the connection to the DB
         return  # and stop
 
-    # add default configuration if it doesn't exist
+    # add default configurations if it doesn't exist
     try:
         insert_default(database)
     except sqlite3.Error as error:

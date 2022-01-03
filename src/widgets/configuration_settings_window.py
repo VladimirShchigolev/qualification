@@ -5,11 +5,11 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property
 
-from src.widgets.configuration.configuration_create_edit_widget import \
+from src.widgets.configurations.configuration_create_edit_widget import \
     ConfigurationCreateEditWidget
-from src.widgets.configuration.configuration_create_widget import ConfigurationCreateWidget
-from src.widgets.configuration.configuration_index_widget import ConfigurationIndexWidget
-from src.widgets.configuration.configuration_view_widget import ConfigurationViewWidget
+from src.widgets.configurations.configuration_create_widget import ConfigurationCreateWidget
+from src.widgets.configurations.configuration_index_widget import ConfigurationIndexWidget
+from src.widgets.configurations.configuration_view_widget import ConfigurationViewWidget
 from src.widgets.sensors.sensor_create_edit_widget import SensorCreateEditWidget
 from src.widgets.sensors.sensor_view_widget import SensorViewWidget
 from src.widgets.tabs.tab_create_edit_widget import TabCreateEditWidget
@@ -17,7 +17,7 @@ from src.widgets.tabs.tab_view_widget import TabViewWidget
 
 
 class ConfigurationSettingsWindow(QWidget):
-    """Window for all configuration settings."""
+    """Window for all configurations settings."""
 
     def __init__(self, db_session):
         """Create configuration settings window."""

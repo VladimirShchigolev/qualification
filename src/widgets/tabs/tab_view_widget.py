@@ -98,7 +98,7 @@ class TabViewWidget(QWidget):
             f'Are you sure you want to delete tab {self._tab.name}?',
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
-        # if confirmed, remove sensor and redirect to configuration
+        # if confirmed, remove sensor and redirect to configurations
         if confirmation == QMessageBox.Yes:
             self._db_session.delete(self._tab)
 
@@ -109,7 +109,7 @@ class TabViewWidget(QWidget):
         self.parent_widget().edit_tab(self._tab)
 
     def _return_to_configuration(self):
-        """Open back the configuration creation/editing/view page."""
+        """Open back the configurations creation/editing/view page."""
         if self._configuration_page == "edit":
             self.parent_widget().edit_configuration(self._tab.configuration)
         elif self._configuration_page == "create":

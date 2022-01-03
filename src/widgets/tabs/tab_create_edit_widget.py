@@ -118,7 +118,7 @@ class TabCreateEditWidget(QWidget):
 
         # add widgets to layout
 
-        # add configuration data
+        # add configurations data
         self._form_layout.add_row(self._title)
         self._form_layout.add_row("Name:", self._name_line)
         self._form_layout.add_row("Column count:", self._grid_width_line)
@@ -270,12 +270,12 @@ class TabCreateEditWidget(QWidget):
             QMessageBox.information(self, "Success!", message,
                                     QMessageBox.Ok, QMessageBox.Ok)
 
-            # redirect to configuration
+            # redirect to configurations
             self._return_to_configuration()
 
     def _cancel(self):
         """Revert changes and open back
-        the configuration creation/editing page."""
+        the configurations creation/editing page."""
         # revert changes
         if self._edit_mode:
             tab_name = self._tab.name
@@ -287,7 +287,7 @@ class TabCreateEditWidget(QWidget):
         self._return_to_configuration()
 
     def _return_to_configuration(self):
-        """Open back the configuration creation/editing/view page."""
+        """Open back the configurations creation/editing/view page."""
         if self._configuration_page == "edit":
             self.parent_widget().edit_configuration(self._configuration)
         elif self._configuration_page == "create":

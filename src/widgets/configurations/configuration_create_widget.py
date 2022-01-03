@@ -7,9 +7,9 @@ from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QHBoxLayout, QPushBu
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property
 
-from src.widgets.configuration.configuration_create_copy_widget import \
+from src.widgets.configurations.configuration_create_copy_widget import \
     ConfigurationCreateCopyWidget
-from src.widgets.configuration.configuration_create_edit_widget import \
+from src.widgets.configurations.configuration_create_edit_widget import \
     ConfigurationCreateEditWidget
 
 

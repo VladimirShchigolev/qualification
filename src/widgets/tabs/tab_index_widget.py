@@ -11,7 +11,7 @@ from src.models.models import Tab
 
 
 class TabIndexWidget(QWidget):
-    """ Widget for showing tabs of the configuration."""
+    """ Widget for showing tabs of the configurations."""
 
     def __init__(self, db_session, configuration, configuration_page="view", read_only=False):
         """Create tab index widget."""
@@ -47,7 +47,7 @@ class TabIndexWidget(QWidget):
         self._tabs_list = QListWidget()
         self._tabs_list.alternating_row_colors = True
 
-        # get all configuration tabs from DB
+        # get all configurations tabs from DB
         all_tabs = self._db_session.query(Tab).filter(
             Tab.configuration == self._configuration).order_by(Tab.name).all()
 
@@ -84,7 +84,7 @@ class TabIndexWidget(QWidget):
     def _search(self, search_string):
         """Filter tab by the search string."""
         # get tabs which name starts with the
-        # search_string from current configuration
+        # search_string from current configurations
         search_string = "{}%".format(search_string)
         filtered_tabs = self._db_session.query(Tab) \
             .filter(Tab.configuration == self._configuration) \

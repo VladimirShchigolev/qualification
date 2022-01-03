@@ -80,7 +80,7 @@ class ConfigurationIndexWidget(QWidget):
         self._layout.add_layout(self._buttons_layout)
 
     def _search(self, search_string):
-        """Filter configuration by the search string."""
+        """Filter configurations by the search string."""
 
         # get configurations which name starts with the search_string
         search_string = "{}%".format(search_string)

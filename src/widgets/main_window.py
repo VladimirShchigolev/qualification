@@ -1,20 +1,40 @@
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QMainWindow, QMenuBar, QMenu, QStatusBar, QTabWidget
+from PySide6.QtWidgets import QMainWindow, QMenuBar, QMenu, QStatusBar, QWidget, QMessageBox
 
 # enable snake_case for Pyside6
 # noinspection PyUnresolvedReferences
 from __feature__ import snake_case, true_property
 
+from sqlalchemy.exc import SQLAlchemyError
+
+from src.models.models import Configuration
+from src.widgets.graphs.graph_tab_widget import GraphTabWidget
+
 
 class MainWindow(QMainWindow):
-    """Main window of the application"""
+    """Main window of the application."""
 
-    def __init__(self, *args, **kwargs):
-        """Create main window"""
-        super(MainWindow, self).__init__(*args, **kwargs)
+    def __init__(self, session_maker):
+        """Create main window."""
+        super().__init__()
+
+        self._session_maker = session_maker
+
+        # set window title
         self.window_title = "Sensor Measurement Data Visualization"
 
+        # set window size
+        self.minimum_size = QSize(800, 600)
+        self.showMaximized()
+
+        self._init_ui()
+
+        # load active configuration
+        self._load_configuration()
+
+    def _init_ui(self):
+        """Initialize UI."""
         # create menu bar
         self._menu_bar = QMenuBar(self)
 
@@ -57,18 +77,37 @@ class MainWindow(QMainWindow):
         # self.actionRecord.triggered.connect(self.record)
         # self.actionSettings.triggered.connect(self.open_settings)
 
-        self._tabs = QTabWidget()
-
+        self._tabs = QWidget()
         self.set_central_widget(self._tabs)
 
-        self.init_ui()
+    def _init_visualization(self, configuration):
+        """Initialize graph page and console"""
+        # remove old widget
+        self._tabs.delete_later()
 
-        self.minimum_size = QSize(800, 600)
-        self.showMaximized()
+        # create new graph tabs page
+        self._tabs = GraphTabWidget(configuration)
+        self.set_central_widget(self._tabs)
 
-    def init_ui(self):
-        pass
+    def _load_configuration(self):
+        """Loads active configuration and updates ui"""
+        db_session = self._session_maker()
+        try:
+            configuration = Configuration.load(db_session)
+        except SQLAlchemyError as e:
+            print(e)
+            configuration = None
+            # show error message
+            QMessageBox.critical(self, "Error!", "Cannot load the configuration!", QMessageBox.Ok,
+                                 QMessageBox.Ok)
+            raise
 
-    def closeEvent(self, event):
+        print(configuration)
+        if configuration:
+            self._init_visualization(configuration)
+
+        db_session.close()
+
+    def close_event(self, event):
+        """Finish work with resources before closing"""
         event.accept()
-
