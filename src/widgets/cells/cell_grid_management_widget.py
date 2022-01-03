@@ -89,6 +89,7 @@ class CellGridManagementWidget(QWidget):
         for row in range(self._grid_layout.row_count()):
             self._grid_layout.set_row_minimum_height(row, 40)
             self._grid_layout.set_row_stretch(row, 1)
+
         for column in range(self._grid_layout.column_count()):
             self._grid_layout.set_column_stretch(column, 1)
 
