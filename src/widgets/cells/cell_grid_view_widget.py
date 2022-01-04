@@ -66,7 +66,7 @@ class CellGridViewWidget(QWidget):
             self._cells[(cell.row, cell.column)] = (cell_button, cell)
 
             cell_button.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
-            cell_button.setMinimumSize(40, 80)
+            cell_button.setMinimumSize(80, 40)
             self._grid_layout.addWidget(cell_button, cell.row, cell.column, cell.rowspan,
                                         cell.colspan)
 

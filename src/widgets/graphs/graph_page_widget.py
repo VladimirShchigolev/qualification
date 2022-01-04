@@ -32,22 +32,27 @@ class GraphPageWidget(QWidget):
     def _fill_grid(self):
         """Fill grid with graph widgets."""
         for cell in self._tab.cells:
-            widget = GraphWidget(cell)
-            widget.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
-            widget.setMinimumWidth(300)
-            widget_width = widget.size().width()
-            widget.setMinimumHeight(widget_width // 2)
+            # if cell contains sensors create graph widget
+            # otherwise use a placeholder
+            if cell.cell_sensors:
+                widget = GraphWidget(cell)
+                size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                size_policy.setHeightForWidth(True)
+                widget.setSizePolicy(size_policy)
+            else:
+                widget = QWidget()
+                widget.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
 
             self._grid_layout.addWidget(widget, cell.row, cell.column, cell.rowspan, cell.colspan)
 
         # set minimum height for rows
         for row in range(self._grid_layout.rowCount()):
-            self._grid_layout.setRowMinimumHeight(row, 150)
+            self._grid_layout.setRowMinimumHeight(row, 250)
             self._grid_layout.setRowStretch(row, 1)
 
         # set minimum width for columns
         for column in range(self._grid_layout.columnCount()):
-            self._grid_layout.setColumnMinimumWidth(column, 300)
+            self._grid_layout.setColumnMinimumWidth(column, 375)
             self._grid_layout.setColumnStretch(column, 1)
 
     def _clear_grid(self):

@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
 
         # set window size
         self.setMinimumSize(800, 600)
-        self.showMaximized()
+        #self.showMaximized()
 
         self._init_ui()
 
@@ -41,10 +41,6 @@ class MainWindow(QMainWindow):
         self._menu_settings.setTitle("Settings")
 
         self.setMenuBar(self._menu_bar)
-
-        # create status bar
-        self._status_bar = QStatusBar(self)
-        self.setStatusBar(self._status_bar)
 
         # create actions
         self._action_new = QAction(self)
