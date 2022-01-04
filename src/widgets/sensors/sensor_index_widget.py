@@ -3,10 +3,6 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, \
     QLabel, QHBoxLayout, QPushButton
 
-# enable snake_case for Pyside6
-# noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property
-
 from src.models.models import Sensor
 
 
@@ -34,18 +30,18 @@ class SensorIndexWidget(QWidget):
 
         # create a title
         self._title = QLabel()
-        self._title.text = "Sensors"
-        self._title.font = QFont("Lato", 14)
-        self._title.alignment = Qt.AlignCenter
+        self._title.setText("Sensors")
+        self._title.setFont(QFont("Lato", 14))
+        self._title.setAlignment(Qt.AlignCenter)
 
         # create a search field
         self._search_line_edit = QLineEdit()
-        self._search_line_edit.placeholder_text = "Search"
+        self._search_line_edit.setPlaceholderText("Search")
         self._search_line_edit.textChanged.connect(self._search)
 
         # create a list widget for sensors
         self._sensors_list = QListWidget()
-        self._sensors_list.alternating_row_colors = True
+        self._sensors_list.setAlternatingRowColors(True)
 
         # get all configuration sensors from DB
         all_sensors = self._db_session.query(Sensor).filter(
@@ -66,30 +62,32 @@ class SensorIndexWidget(QWidget):
             self._new_button = QPushButton("New")
             self._new_button.clicked.connect(self._create_sensor)
 
-            self._buttons_layout.add_widget(self._new_button)
+            self._buttons_layout.addWidget(self._new_button)
 
         self._view_button = QPushButton("View")
         self._view_button.clicked.connect(self._show_selected_sensor)
 
         # move view button to the right
-        self._buttons_layout.add_stretch(1)
+        self._buttons_layout.addStretch(1)
 
-        self._buttons_layout.add_widget(self._view_button)
+        self._buttons_layout.addWidget(self._view_button)
 
         # add widgets to layout
-        self._layout.add_widget(self._title)
-        self._layout.add_widget(self._search_line_edit)
-        self._layout.add_widget(self._sensors_list)
-        self._layout.add_layout(self._buttons_layout)
+        self._layout.addWidget(self._title)
+        self._layout.addWidget(self._search_line_edit)
+        self._layout.addWidget(self._sensors_list)
+        self._layout.addLayout(self._buttons_layout)
 
     def _search(self, search_string):
         """Filter sensors by the search string."""
         # get sensors which name starts with
         # the search_string from current configuration
         search_string = "{}%".format(search_string)
-        filtered_sensors = self._db_session.query(Sensor).filter(
-            Sensor.configuration == self._configuration).filter(
-            Sensor.short_name.like(search_string)).order_by(Sensor.short_name).all()
+        filtered_sensors = self._db_session.query(Sensor) \
+            .filter(Sensor.configuration == self._configuration) \
+            .filter(Sensor.short_name.like(search_string)) \
+            .order_by(Sensor.short_name) \
+            .all()
 
         # clear current list and fill it with filtered sensors
         self._sensors_list.clear()
@@ -99,7 +97,7 @@ class SensorIndexWidget(QWidget):
     def _show_selected_sensor(self):
         """Open view page for the selected sensor."""
         # get selected items
-        selected_items = self._sensors_list.selected_items()
+        selected_items = self._sensors_list.selectedItems()
         if selected_items:
             # show the first and only item
             self._show_list_item_sensor(selected_items[0])
@@ -116,9 +114,9 @@ class SensorIndexWidget(QWidget):
             .one_or_none()
 
         if sensor is not None:  # if sensor found
-            self.parent_widget().parent_widget().view_sensor(sensor, self._configuration_page)
+            self.parentWidget().parentWidget().view_sensor(sensor, self._configuration_page)
 
     def _create_sensor(self):
         """Open a sensor creating page."""
-        self.parent_widget().parent_widget().create_sensor(self._configuration,
-                                                           self._configuration_page)
+        self.parentWidget().parentWidget().create_sensor(self._configuration,
+                                                         self._configuration_page)

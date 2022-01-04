@@ -1,10 +1,5 @@
-from PySide6.QtCore import QSize
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMainWindow, QMenuBar, QMenu, QStatusBar, QWidget, QMessageBox
-
-# enable snake_case for Pyside6
-# noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -23,10 +18,10 @@ class MainWindow(QMainWindow):
         self._session_maker = session_maker
 
         # set window title
-        self.window_title = "Sensor Measurement Data Visualization"
+        self.setWindowTitle("Sensor Measurement Data Visualization")
 
         # set window size
-        self.minimum_size = QSize(800, 600)
+        self.setMinimumSize(800, 600)
         self.showMaximized()
 
         self._init_ui()
@@ -40,38 +35,40 @@ class MainWindow(QMainWindow):
         self._menu_bar = QMenuBar(self)
 
         self._menu_file = QMenu(self._menu_bar)
-        self._menu_file.title = "File"
+        self._menu_file.setTitle("File")
 
         self._menu_settings = QMenu(self._menu_bar)
-        self._menu_settings.title = "Settings"
+        self._menu_settings.setTitle("Settings")
 
-        self.set_menu_bar(self._menu_bar)
+        self.setMenuBar(self._menu_bar)
 
         # create status bar
         self._status_bar = QStatusBar(self)
-        self.set_status_bar(self._status_bar)
+        self.setStatusBar(self._status_bar)
 
         # create actions
         self._action_new = QAction(self)
-        self._action_new.text = "New Session"
+        self._action_new.setText("New Session")
 
         self._action_open = QAction(self)
-        self._action_open.text = "Open Recording"
+        self._action_open.setText("Open Recording")
 
         self._action_record = QAction(self)
-        self._action_record.text = "Start Recording"
+        self._action_record.setText("Start Recording")
 
         self._action_configurations = QAction(self)
-        self._action_configurations.text = "Configurations"
+        self._action_configurations.setText("Configurations")
 
         # add actions to the menu
-        self._menu_file.add_action(self._action_new)
-        self._menu_file.add_action(self._action_open)
-        self._menu_file.add_action(self._action_record)
-        self._menu_bar.add_action(self._menu_file.menu_action())
+        self._menu_file.addActions(
+            [self._action_new,
+             self._action_open,
+             self._action_record]
+        )
+        self._menu_bar.addAction(self._menu_file.menuAction())
 
-        self._menu_settings.add_action(self._action_configurations)
-        self._menu_bar.add_action(self._menu_settings.menu_action())
+        self._menu_settings.addAction(self._action_configurations)
+        self._menu_bar.addAction(self._menu_settings.menuAction())
 
         # self.actionNew.triggered.connect(self.start_new_session)
         # self.actionOpen.triggered.connect(self.open_record)
@@ -79,16 +76,16 @@ class MainWindow(QMainWindow):
         self._action_configurations.triggered.connect(self._open_configurations)
 
         self._tabs = QWidget()
-        self.set_central_widget(self._tabs)
+        self.setCentralWidget(self._tabs)
 
     def _init_visualization(self, configuration):
         """Initialize graph page and console"""
         # remove old widget
-        self._tabs.delete_later()
+        self._tabs.deleteLater()
 
         # create new graph tabs page
         self._tabs = GraphTabWidget(configuration)
-        self.set_central_widget(self._tabs)
+        self.setCentralWidget(self._tabs)
 
     def _load_configuration(self):
         """Loads active configuration and updates ui"""
@@ -117,5 +114,6 @@ class MainWindow(QMainWindow):
         print("lol")
 
     def close_event(self, event):
-        """Finish work with resources before closing"""
+        """Finish work with resources before closing."""
+        self._tabs.close()
         event.accept()

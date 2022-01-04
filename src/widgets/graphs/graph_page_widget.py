@@ -1,9 +1,5 @@
 from PySide6.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QScrollArea, QSizePolicy
 
-# enable snake_case for Pyside6
-# noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property
-
 from src.widgets.graphs.graph_widget import GraphWidget
 
 
@@ -37,18 +33,30 @@ class GraphPageWidget(QWidget):
         """Fill grid with graph widgets."""
         for cell in self._tab.cells:
             widget = GraphWidget(cell)
-            widget.size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-            widget.minimum_height = 150
-            widget.minimum_width = 300
+            widget.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
+            widget.setMinimumWidth(300)
+            widget_width = widget.size().width()
+            widget.setMinimumHeight(widget_width // 2)
 
-            self._grid_layout.add_widget(widget, cell.row, cell.column, cell.rowspan, cell.colspan)
+            self._grid_layout.addWidget(widget, cell.row, cell.column, cell.rowspan, cell.colspan)
 
         # set minimum height for rows
-        for row in range(self._grid_layout.row_count()):
-            self._grid_layout.set_row_minimum_height(row, 150)
-            self._grid_layout.set_row_stretch(row, 1)
+        for row in range(self._grid_layout.rowCount()):
+            self._grid_layout.setRowMinimumHeight(row, 150)
+            self._grid_layout.setRowStretch(row, 1)
 
         # set minimum width for columns
-        for column in range(self._grid_layout.column_count()):
-            self._grid_layout.set_column_minimum_width(column, 300)
-            self._grid_layout.set_column_stretch(column, 1)
+        for column in range(self._grid_layout.columnCount()):
+            self._grid_layout.setColumnMinimumWidth(column, 300)
+            self._grid_layout.setColumnStretch(column, 1)
+
+    def _clear_grid(self):
+        """Delete all elements from grid layout."""
+        self._cells.clear()
+        self._selected_cells = set()
+        for i in range(self._grid_layout.count() - 1, -1, -1):
+            self._grid_layout.takeAt(i).widget().deleteLater()
+
+    def close(self):
+        """Clear grid on closing."""
+        self._clear_grid()

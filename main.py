@@ -1,9 +1,7 @@
+import sys
+
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
-
-# snake_case enabled for Pyside6
-# noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -18,13 +16,22 @@ def main():
     session_cls = sessionmaker(bind=engine)
 
     app = QApplication([])
-    app.set_font(QFont("Lato", 12, QFont.Normal))
+    app.setFont(QFont("Lato", 12, QFont.Normal))
 
     window = MainWindow(session_cls)
     window.show()
 
     app.exec()
 
+
+def excepthook(cls, exception, traceback):
+    """Ignores TypeError thrown by pyqtgraph bug"""
+    if not (cls is TypeError
+            and str(exception).strip().endswith("native Qt signal is not callable")):
+        raise exception
+
+
+sys.excepthook = excepthook
 
 if __name__ == '__main__':
     main()

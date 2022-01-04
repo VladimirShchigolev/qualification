@@ -4,9 +4,9 @@ from pyqtgraph import PlotWidget
 class GraphWidget(PlotWidget):
     """Widget for sensor measurement graphs."""
 
-    def __init__(self, cell):
+    def __init__(self, cell, *args, **kwargs):
         """Create graph widget."""
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
         self._cell = cell
 

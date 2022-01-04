@@ -3,12 +3,9 @@ from PySide6.QtGui import QFont, QRegularExpressionValidator
 from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, \
     QVBoxLayout, QComboBox, QMessageBox
 
-# enable snake_case for Pyside6
-# noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property
-
 from src.models.models import Tab, Cell, SensorCell
 from src.widgets.cells.cell_grid_management_widget import CellGridManagementWidget
+from src.widgets.cells.cell_grid_view_widget import CellGridViewWidget
 
 
 class TabCreateEditWidget(QWidget):
@@ -42,25 +39,25 @@ class TabCreateEditWidget(QWidget):
         self._layout = QVBoxLayout(self)
 
         self._form_layout = QFormLayout()
-        self._form_layout.horizontal_spacing = 20
-        self._form_layout.contents_margins = QMargins(10, 0, 10, 0)
+        self._form_layout.setHorizontalSpacing(20)
+        self._form_layout.setContentsMargins(10, 0, 10, 0)
 
         # create a title
         self._title = QLabel()
         if self._edit_mode:
-            self._title.text = f'Edit Tab {self._tab.name}'
+            self._title.setText(f'Edit Tab {self._tab.name}')
         else:
-            self._title.text = "Create Tab"
-        self._title.font = QFont("Lato", 18)
-        self._title.alignment = Qt.AlignCenter
-        self._title.set_contents_margins(10, 10, 10, 20)
+            self._title.setText("Create Tab")
+        self._title.setFont(QFont("Lato", 18))
+        self._title.setAlignment(Qt.AlignCenter)
+        self._title.setContentsMargins(10, 10, 10, 20)
 
         # create name field display
         self._name_line = QLineEdit()
-        self._name_line.text = self._tab.name
+        self._name_line.setText(self._tab.name)
 
         # set validation rules to 1-30 characters in length
-        self._name_line.set_validator(
+        self._name_line.setValidator(
             QRegularExpressionValidator(QRegularExpression(r'.{1,30}'))
         )
 
@@ -75,10 +72,10 @@ class TabCreateEditWidget(QWidget):
         self._grid_width_line = QComboBox()
 
         # fill it with width from 1 to 10
-        self._grid_width_line.add_items(
+        self._grid_width_line.addItems(
             [str(number) for number in range(1, 11)]
         )
-        self._grid_width_line.current_text = str(self._tab.grid_width)
+        self._grid_width_line.setCurrentText(str(self._tab.grid_width))
 
         # change height combobox options on width change;
         # resize grid on width change
@@ -88,11 +85,11 @@ class TabCreateEditWidget(QWidget):
         self._grid_height_line = QComboBox()
 
         # fill it with height from 1 to 20
-        self._grid_height_line.add_items(
+        self._grid_height_line.addItems(
             [str(number) for number in range(1, 21)]
         )
 
-        self._grid_height_line.current_text = str(self._tab.grid_height)
+        self._grid_height_line.setCurrentText(str(self._tab.grid_height))
 
         # resize grid on height change
         self._grid_height_line.currentTextChanged.connect(self._update_height)
@@ -102,40 +99,40 @@ class TabCreateEditWidget(QWidget):
 
         # section of buttons
         self._buttons_layout = QHBoxLayout()
-        self._buttons_layout.contents_margins = QMargins(10, 0, 10, 0)
+        self._buttons_layout.setContentsMargins(10, 0, 10, 0)
 
         self._save_button = QPushButton("Save")
         self._save_button.clicked.connect(self._save)
         self._cancel_button = QPushButton("Cancel")
         self._cancel_button.clicked.connect(self._cancel)
 
-        self._buttons_layout.add_widget(self._save_button)
+        self._buttons_layout.addWidget(self._save_button)
 
         # move cancel button to the right
-        self._buttons_layout.add_stretch(1)
+        self._buttons_layout.addStretch(1)
 
-        self._buttons_layout.add_widget(self._cancel_button)
+        self._buttons_layout.addWidget(self._cancel_button)
 
         # add widgets to layout
 
         # add configurations data
-        self._form_layout.add_row(self._title)
-        self._form_layout.add_row("Name:", self._name_line)
-        self._form_layout.add_row("Column count:", self._grid_width_line)
-        self._form_layout.add_row("Row count:", self._grid_height_line)
-        self._layout.add_layout(self._form_layout)
-        self._layout.add_widget(self._grid)
+        self._form_layout.addRow(self._title)
+        self._form_layout.addRow("Name:", self._name_line)
+        self._form_layout.addRow("Column count:", self._grid_width_line)
+        self._form_layout.addRow("Row count:", self._grid_height_line)
+        self._layout.addLayout(self._form_layout)
+        self._layout.addWidget(self._grid)
 
         # add buttons
-        self._layout.add_layout(self._buttons_layout)
+        self._layout.addLayout(self._buttons_layout)
 
     def _update_possible_heights(self):
         """Update provided grid height to match grid width value."""
         # get chosen value
-        width = int(self._grid_width_line.current_text)
+        width = int(self._grid_width_line.currentText())
 
         # save current height
-        current_height = int(self._grid_height_line.current_text)
+        current_height = int(self._grid_height_line.currentText())
 
         # remove onTextChange event handler while editing
         self._grid_height_line.currentTextChanged.disconnect(self._update_height)
@@ -145,16 +142,16 @@ class TabCreateEditWidget(QWidget):
         maximal_height = min(20, 100 // width)
 
         # add height values for chosen width
-        self._grid_height_line.add_items(
+        self._grid_height_line.addItems(
             [str(possible_height) for possible_height in range(1, maximal_height + 1)]
         )
 
         # if current height is no longer possible,
         # change it to maximal possible
         if current_height > maximal_height:
-            self._grid_height_line.current_text = str(maximal_height)
+            self._grid_height_line.setCurrentText(str(maximal_height))
         else:  # otherwise set to previous value
-            self._grid_height_line.current_text = str(current_height)
+            self._grid_height_line.setCurrentText(str(current_height))
 
         # add event handler back when editing is finished
         self._grid_height_line.currentTextChanged.connect(self._update_height)
@@ -165,7 +162,7 @@ class TabCreateEditWidget(QWidget):
     def _update_height(self):
         """Resize the grid on height change."""
         # get chosen value
-        height = int(self._grid_height_line.current_text)
+        height = int(self._grid_height_line.currentText())
 
         self._resize(self._tab.grid_width, self._tab.grid_height, self._tab.grid_width,
                      height)  # resize the grid
@@ -231,9 +228,9 @@ class TabCreateEditWidget(QWidget):
     def _save(self):
         """Save tab from data in the form."""
         # get data from the form
-        name = self._name_line.text
-        grid_width = int(self._grid_width_line.current_text)
-        grid_height = int(self._grid_height_line.current_text)
+        name = self._name_line.text()
+        grid_width = int(self._grid_width_line.currentText())
+        grid_height = int(self._grid_height_line.currentText())
 
         # check for duplicates is needed
         # only when tab name gets changed
@@ -289,8 +286,8 @@ class TabCreateEditWidget(QWidget):
     def _return_to_configuration(self):
         """Open back the configurations creation/editing/view page."""
         if self._configuration_page == "edit":
-            self.parent_widget().edit_configuration(self._configuration)
+            self.parentWidget().edit_configuration(self._configuration)
         elif self._configuration_page == "create":
-            self.parent_widget().create_configuration(self._configuration)
+            self.parentWidget().create_configuration(self._configuration)
         else:
-            self.parent_widget().view_configuration(self._configuration)
+            self.parentWidget().view_configuration(self._configuration)

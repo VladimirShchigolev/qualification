@@ -1,8 +1,6 @@
 from PySide6.QtWidgets import QTabWidget, QWidget
 
-# enable snake_case for Pyside6
-# noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property
+from src.widgets.graphs.graph_page_widget import GraphPageWidget
 
 
 class GraphTabWidget(QTabWidget):
@@ -20,8 +18,13 @@ class GraphTabWidget(QTabWidget):
     def _init_ui(self):
         """Initialize UI."""
         for tab in self._configuration.tabs:
-            new_tab = QWidget()
+            new_tab = GraphPageWidget(tab)
 
             self._tabs.append(new_tab)
-            self.add_tab(new_tab, tab.name)
+            self.addTab(new_tab, tab.name)
 
+    def close(self):
+        """Closes all tabs."""
+        for tab in self._tabs:
+            tab.close()
+        self._tabs = []

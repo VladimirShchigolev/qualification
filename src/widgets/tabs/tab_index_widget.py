@@ -3,10 +3,6 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, \
     QLabel, QHBoxLayout, QPushButton
 
-# enable snake_case for Pyside6
-# noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property
-
 from src.models.models import Tab
 
 
@@ -34,18 +30,18 @@ class TabIndexWidget(QWidget):
 
         # create a title
         self._title = QLabel()
-        self._title.text = "Tabs"
-        self._title.font = QFont("Lato", 14)
-        self._title.alignment = Qt.AlignCenter
+        self._title.setText("Tabs")
+        self._title.setFont(QFont("Lato", 14))
+        self._title.setAlignment(Qt.AlignCenter)
 
         # create a search field
         self._search_line_edit = QLineEdit()
-        self._search_line_edit.placeholder_text = "Search"
+        self._search_line_edit.setPlaceholderText("Search")
         self._search_line_edit.textChanged.connect(self._search)
 
         # create a list widget for tabs
         self._tabs_list = QListWidget()
-        self._tabs_list.alternating_row_colors = True
+        self._tabs_list.setAlternatingRowColors(True)
 
         # get all configurations tabs from DB
         all_tabs = self._db_session.query(Tab).filter(
@@ -65,21 +61,21 @@ class TabIndexWidget(QWidget):
             self._new_button = QPushButton("New")
             self._new_button.clicked.connect(self._create_tab)
 
-            self._buttons_layout.add_widget(self._new_button)
+            self._buttons_layout.addWidget(self._new_button)
 
         self._view_button = QPushButton("View")
         self._view_button.clicked.connect(self._show_selected_tab)
 
         # move view button to the right
-        self._buttons_layout.add_stretch(1)
+        self._buttons_layout.addStretch(1)
 
-        self._buttons_layout.add_widget(self._view_button)
+        self._buttons_layout.addWidget(self._view_button)
 
         # add widgets to layout
-        self._layout.add_widget(self._title)
-        self._layout.add_widget(self._search_line_edit)
-        self._layout.add_widget(self._tabs_list)
-        self._layout.add_layout(self._buttons_layout)
+        self._layout.addWidget(self._title)
+        self._layout.addWidget(self._search_line_edit)
+        self._layout.addWidget(self._tabs_list)
+        self._layout.addLayout(self._buttons_layout)
 
     def _search(self, search_string):
         """Filter tab by the search string."""
@@ -100,7 +96,7 @@ class TabIndexWidget(QWidget):
     def _show_selected_tab(self):
         """Open view page for the selected tab."""
         # get selected items
-        selected_items = self._tabs_list.selected_items()
+        selected_items = self._tabs_list.selectedItems()
         if selected_items:
             # show the first and only item
             self._show_list_item_tab(selected_items[0])
@@ -116,9 +112,9 @@ class TabIndexWidget(QWidget):
             .one_or_none()
 
         if tab is not None:  # if tab found
-            self.parent_widget().parent_widget().view_tab(tab, self._configuration_page)
+            self.parentWidget().parentWidget().view_tab(tab, self._configuration_page)
 
     def _create_tab(self):
         """Open a tab creating page."""
-        self.parent_widget().parent_widget().create_tab(self._configuration,
-                                                        self._configuration_page)
+        self.parentWidget().parentWidget().create_tab(self._configuration,
+                                                      self._configuration_page)

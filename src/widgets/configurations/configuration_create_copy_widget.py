@@ -1,12 +1,7 @@
 from PySide6.QtCore import Qt, QMargins, QRegularExpression
 from PySide6.QtGui import QFont, QRegularExpressionValidator
-from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, \
-    QVBoxLayout, \
-    QComboBox, QMessageBox
-
-# enable snake_case for Pyside6
-# noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property
+from PySide6.QtWidgets import QWidget, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, \
+    QVBoxLayout, QComboBox, QMessageBox
 
 from src.models.models import Configuration, Tab, Sensor, Cell, SensorCell
 
@@ -28,26 +23,26 @@ class ConfigurationCreateCopyWidget(QWidget):
 
         # create form layout
         self._form_layout = QFormLayout()
-        self._form_layout.horizontal_spacing = 20
-        self._form_layout.contents_margins = QMargins(10, 0, 10, 0)
+        self._form_layout.setHorizontalSpacing(20)
+        self._form_layout.setContentsMargins(10, 0, 10, 0)
 
         # create name field display
         self._name_line = QLineEdit()
 
         # set validation rules to 1-30 characters in length
-        self._name_line.set_validator(
+        self._name_line.setValidator(
             QRegularExpressionValidator(QRegularExpression(r'.{1,30}'))
         )
 
         # create field display for configuration that gets copied
         self._source_configuration_line = QComboBox()
-        self._source_configuration_line.editable = True
+        self._source_configuration_line.setEditable(True)
         # set case insensitive completion
-        self._source_configuration_line.completer().case_sensitivity = Qt.CaseInsensitive
-        self._source_configuration_line.current_text = ""
+        self._source_configuration_line.completer().setCaseSensitivity(Qt.CaseInsensitive)
+        self._source_configuration_line.setCurrentText("")
 
         # set validation rules to 1-30 characters in length
-        self._source_configuration_line.set_validator(
+        self._source_configuration_line.setValidator(
             QRegularExpressionValidator(QRegularExpression(r'.{1,30}'))
         )
 
@@ -55,35 +50,35 @@ class ConfigurationCreateCopyWidget(QWidget):
         configurations = self._db_session.query(Configuration).order_by(Configuration.name).all()
 
         for configuration in configurations:
-            self._source_configuration_line.add_item(str(configuration))
+            self._source_configuration_line.addItem(str(configuration))
 
         # section of buttons
         self._buttons_layout = QHBoxLayout()
-        self._buttons_layout.contents_margins = QMargins(10, 0, 10, 0)
+        self._buttons_layout.setContentsMargins(10, 0, 10, 0)
 
         self._save_button = QPushButton("Save")
         self._save_button.clicked.connect(self._save)
         self._cancel_button = QPushButton("Cancel")
         self._cancel_button.clicked.connect(self._cancel)
 
-        self._buttons_layout.add_widget(self._save_button)
+        self._buttons_layout.addWidget(self._save_button)
 
         # move cancel button to the right
-        self._buttons_layout.add_stretch(1)
+        self._buttons_layout.addStretch(1)
 
-        self._buttons_layout.add_widget(self._cancel_button)
+        self._buttons_layout.addWidget(self._cancel_button)
 
         # add widgets to layout
 
         # add configuration data
-        self._form_layout.add_row("Name:", self._name_line)
-        self._form_layout.add_row("Source Configuration:", self._source_configuration_line)
-        self._layout.add_layout(self._form_layout)
+        self._form_layout.addRow("Name:", self._name_line)
+        self._form_layout.addRow("Source Configuration:", self._source_configuration_line)
+        self._layout.addLayout(self._form_layout)
 
-        self._layout.add_stretch(1)  # move buttons to the bottom
+        self._layout.addStretch(1)  # move buttons to the bottom
 
         # add buttons
-        self._layout.add_layout(self._buttons_layout)
+        self._layout.addLayout(self._buttons_layout)
 
     def _copy_sensors(self, configuration, source_configuration):
         """Copy sensors from the source to the new configuration."""
@@ -136,8 +131,8 @@ class ConfigurationCreateCopyWidget(QWidget):
         """Create a new configuration based on
         chosen name and source configuration."""
         # get data from the form
-        name = self._name_line.text
-        source_configuration_name = self._source_configuration_line.current_text
+        name = self._name_line.text()
+        source_configuration_name = self._source_configuration_line.currentText()
 
         # check if source configuration exists
         source_configuration = self._db_session.query(Configuration) \
