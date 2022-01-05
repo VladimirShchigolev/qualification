@@ -14,9 +14,6 @@ class Configuration(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     show_unknown_sensors = Column(Boolean, nullable=False, default=False)
-    show_model = Column(Boolean, nullable=False, default=False)
-    model_chamber_text = Column(String, nullable=True, default=None)
-    model_control_text = Column(String, nullable=True, default=None)
     active = Column(Boolean, nullable=False, default=False)
 
     def __repr__(self):
