@@ -63,7 +63,7 @@ class GraphPageWidget(QWidget):
         for graph_widget in self._graph_widgets:
             sensors = graph_widget.get_sensor_list()
             for sensor in sensors:
-                if sensor in graphs:
+                if str(sensor) in graphs:
                     graphs[str(sensor)].append(graph_widget)
                 else:
                     graphs[str(sensor)] = [graph_widget]

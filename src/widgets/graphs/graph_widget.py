@@ -1,7 +1,7 @@
 import re
 
 from PySide6.QtGui import QFont
-from pyqtgraph import PlotWidget
+from pyqtgraph import PlotWidget, mkPen
 
 
 class GraphWidget(PlotWidget):
@@ -30,8 +30,8 @@ class GraphWidget(PlotWidget):
         self._cell = cell
 
         # set title and time axis
-        self.setTitle(cell.title, color='#000000', size='18pt')
-        self.setLabel('bottom', "Time, s", **{'color': '#000000', 'font-size': '14pt'})
+        self.setTitle(cell.title, color='#444444', size='18pt')
+        self.setLabel('bottom', "Time, s", **{'color': '#444444', 'font-size': '14pt'})
 
         self.setBackground("#ffffff")
 
@@ -53,7 +53,7 @@ class GraphWidget(PlotWidget):
             self._split_left_label()
 
         print(self._left_label_text)
-        self.setLabel('left', self._left_label_text, **{'color': '#000000', 'font-size': '14pt',
+        self.setLabel('left', self._left_label_text, **{'color': '#444444', 'font-size': '14pt',
                                                         'overflow-wrap': 'break-word'})
 
         # set grid and autorange
@@ -64,14 +64,22 @@ class GraphWidget(PlotWidget):
         self.setMenuEnabled(enableMenu=False)  # disable viewBox menu
         self.setMenuEnabled(enableMenu=True, enableViewBoxMenu=None)
 
+        colors = ["#2f4b7c", "#a05195", "#d45087", "#f95d6a",
+                  "#ff7c43", "#ffa600", "#003f5c", "#2f4b7c"]
+
         # set data lines
         self._data_lines = {}
         self._x = {}
         self._y = {}
+        sensor_number = 0
         for sensor in self._sensors:
-            self._data_lines[sensor.short_name] = self.plot(name=sensor.short_name)
+            color = colors[sensor_number]
+            self._data_lines[sensor.short_name] = self.plot(name=sensor.short_name,
+                                                            pen=mkPen(color, width=2))
             self._x[sensor.short_name] = []
             self._y[sensor.short_name] = []
+
+            sensor_number += 1
 
     def update_data(self, x, y, line=""):
         """Add a point to the graph."""
@@ -79,7 +87,7 @@ class GraphWidget(PlotWidget):
             self._x[line].append(x)
             self._y[line].append(y)
 
-            self._data_lines[line].setData(self.x[line], self.y[line])
+            self._data_lines[line].setData(self._x[line], self._y[line])
 
     def _split_left_label(self):
         """Splits left label on space or '_' closer to the middle"""
@@ -135,10 +143,11 @@ class GraphWidget(PlotWidget):
         if len(title) > 25:
             title = title[:25] + "..."
         self.setTitle(title, size=f'{title_size}pt')
-        self.setLabel('left', self._left_label_text, **{'font-size': f'{left_label_size}pt',
-                                                        'word-break': 'break-all'})
-        self.setLabel('bottom', "Time, s", **{'font-size': f'{bottom_label_size}pt'})
-
+        self.setLabel('left', self._left_label_text,
+                      **{'color': '#444444', 'font-size': f'{left_label_size}pt',
+                         'word-break': 'break-all'})
+        self.setLabel('bottom', "Time, s",
+                      **{'color': '#444444', 'font-size': f'{bottom_label_size}pt'})
 
     def resizeEvent(self, ev):
         """Resize text when widget gets resized."""

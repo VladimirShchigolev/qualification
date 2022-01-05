@@ -1,4 +1,8 @@
+import json
+import re
+
 from PySide6.QtGui import QAction
+from PySide6.QtNetwork import QTcpSocket, QHostAddress
 from PySide6.QtWidgets import QMainWindow, QMenuBar, QMenu, QStatusBar, QWidget, QMessageBox
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -28,6 +32,12 @@ class MainWindow(QMainWindow):
 
         # load active configuration
         self._load_configuration()
+
+        # set up TCP socket
+        self._socket = QTcpSocket(self)
+        self._socket.readyRead.connect(self._read_from_socket)
+        self._socket.errorOccurred.connect(self._show_socket_error)
+        self._connect()
 
     def _init_ui(self):
         """Initialize UI."""
@@ -109,7 +119,80 @@ class MainWindow(QMainWindow):
 
         self._configurations_window = ConfigurationSettingsWindow(self._session_maker)
         self._configurations_window.show()
-        print("lol")
+
+    def _connect(self):
+        """Connect to data source."""
+        self._socket.connectToHost("127.0.0.1", 64363)
+
+    def _read_from_socket(self):
+        """Reads data from socket when new data arrives."""
+        if self._socket.canReadLine():
+            # convert from QBytearray to str
+            line = str(self._socket.readLine())[2:-3].strip()
+            self._process_data(line)
+
+    def _process_data(self, line):
+        """Process the data in the given string."""
+        def check_correctness(data):
+            correct_format = True
+            # check if obligatory fields are in data
+            if correct_format and ("timestamp" not in data or "sensors" not in data
+                                   or not isinstance(data["sensors"], dict)):
+                correct_format = False
+
+            print("uno", correct_format)
+            # check if timestamp format is correct
+            if not re.match('^[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}$', data["timestamp"]):
+                correct_format = False
+            print("duo", correct_format)
+            # check if values of sensors are numbers
+            if correct_format:
+                for sensor_value in data["sensors"].values():
+                    print(sensor_value)
+                    if not (isinstance(sensor_value, int) or isinstance(sensor_value, float)):
+                        correct_format = False
+                        break
+
+            return correct_format
+
+        if len(line) > 6000:
+            print("Line is too long: " + line[:6000] + "...")
+        else:
+            correct_format = True
+            try:
+                data = json.loads(line)
+            except json.JSONDecodeError:
+                data = None
+                correct_format = False
+
+            if correct_format:
+                correct_format = check_correctness(data)
+
+            if correct_format:
+                self._update_graphs(data)
+                print(line)
+            else:
+                print("Wrong format: " + line)
+
+    def _update_graphs(self, data):
+        """Add new points to the graphs."""
+        def timestamp_to_seconds(timestamp):
+            """Turns string timestamp into seconds"""
+            # timestamp format:
+            # HH:MM:SS.mmm
+            h, m, s_and_ms = timestamp.split(":")
+            s, ms = s_and_ms.split(".")
+            return int(h)*3600 + int(m)*60 + int(s) + int(ms) / 1000
+
+        seconds = timestamp_to_seconds(data["timestamp"])
+        for sensor, value in data["sensors"].items():
+            if sensor in self._graphs:
+                for graph in self._graphs[sensor]:
+                    graph.update_data(seconds, value, line=sensor)
+
+    def _show_socket_error(self, error):
+        """Show socket error when it occurs."""
+        print(error)
 
     def close_event(self, event):
         """Finish work with resources before closing."""
