@@ -31,6 +31,7 @@ class GraphPageWidget(QWidget):
 
     def _fill_grid(self):
         """Fill grid with graph widgets."""
+        self._graph_widgets = []
         for cell in self._tab.cells:
             # if cell contains sensors create graph widget
             # otherwise use a placeholder
@@ -39,6 +40,7 @@ class GraphPageWidget(QWidget):
                 size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
                 size_policy.setHeightForWidth(True)
                 widget.setSizePolicy(size_policy)
+                self._graph_widgets.append(widget)
             else:
                 widget = QWidget()
                 widget.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
@@ -55,10 +57,20 @@ class GraphPageWidget(QWidget):
             self._grid_layout.setColumnMinimumWidth(column, 375)
             self._grid_layout.setColumnStretch(column, 1)
 
+    def get_graphs(self):
+        """Get list of graph widgets for sensors."""
+        graphs = {}
+        for graph_widget in self._graph_widgets:
+            sensors = graph_widget.get_sensor_list()
+            for sensor in sensors:
+                if sensor in graphs:
+                    graphs[str(sensor)].append(graph_widget)
+                else:
+                    graphs[str(sensor)] = [graph_widget]
+        return graphs
+
     def _clear_grid(self):
         """Delete all elements from grid layout."""
-        self._cells.clear()
-        self._selected_cells = set()
         for i in range(self._grid_layout.count() - 1, -1, -1):
             self._grid_layout.takeAt(i).widget().deleteLater()
 

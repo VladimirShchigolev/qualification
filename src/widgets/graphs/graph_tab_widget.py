@@ -23,6 +23,19 @@ class GraphTabWidget(QTabWidget):
             self._tabs.append(new_tab)
             self.addTab(new_tab, tab.name)
 
+    def get_graphs(self):
+        """Get list of graph widgets for sensors."""
+        graphs = {}
+        for tab in self._tabs:
+            tab_graphs = tab.get_graphs()
+            for sensor in tab_graphs:
+                if sensor in graphs:
+                    graphs[sensor] += tab_graphs[sensor]
+                else:
+                    graphs[sensor] = tab_graphs[sensor]
+
+        return graphs
+
     def close(self):
         """Closes all tabs."""
         for tab in self._tabs:

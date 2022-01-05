@@ -85,7 +85,7 @@ class GraphWidget(PlotWidget):
         """Splits left label on space or '_' closer to the middle"""
         # find potential best split places
         split_places = [m.start() for m in re.finditer('[_ ]', self._left_label_text)]
-        print(split_places)
+
         middle = len(self._left_label_text) / 2
 
         # if potential split places exist
@@ -129,7 +129,6 @@ class GraphWidget(PlotWidget):
         left_label_size = min(left_label_size, self.LABEL_MAX_SIZE)
         left_label_size = max(left_label_size, self.LABEL_MIN_SIZE)
 
-
         title = self._cell.title
         if len(title) > 20:
             title_size = max(self.TITLE_MIN_SIZE, title_size - 2)
@@ -140,13 +139,16 @@ class GraphWidget(PlotWidget):
                                                         'word-break': 'break-all'})
         self.setLabel('bottom', "Time, s", **{'font-size': f'{bottom_label_size}pt'})
 
-        print(title_size, bottom_label_size)
 
     def resizeEvent(self, ev):
         """Resize text when widget gets resized."""
         if ev is not None:
             self._change_text_size()
         super().resizeEvent(ev)
+
+    def get_sensor_list(self):
+        """Return list of sensors in this graph."""
+        return self._sensors
 
     def heightForWidth(self, width):
         """Calculate height for given width."""
