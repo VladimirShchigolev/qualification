@@ -14,9 +14,6 @@ class Configuration(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     show_unknown_sensors = Column(Boolean, nullable=False, default=False)
-    show_model = Column(Boolean, nullable=False, default=False)
-    model_chamber_text = Column(String, nullable=True, default=None)
-    model_control_text = Column(String, nullable=True, default=None)
     active = Column(Boolean, nullable=False, default=False)
 
     def __repr__(self):
@@ -44,6 +41,12 @@ class Configuration(Base):
             raise ValueError("Name should be 1 to 30 characters long!")
 
         return True
+
+    @staticmethod
+    def load(db_session):
+        """Load active configuration from"""
+        configuration = db_session.query(Configuration).filter(Configuration.active == True).one_or_none()
+        return configuration
 
 
 class SensorCell(Base):

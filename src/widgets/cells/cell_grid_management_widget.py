@@ -1,10 +1,6 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout, QScrollArea, QGridLayout, \
     QSizePolicy, QMessageBox
 
-# enable snake_case for Pyside6
-# noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property
-
 from src.models.models import Cell, SensorCell
 from src.widgets.cells.cell_edit_widget import CellEditWidget
 
@@ -33,19 +29,19 @@ class CellGridManagementWidget(QWidget):
         self._scroll_area = QScrollArea()
         self._grid_layout = QGridLayout()
         self._grid_widget = QWidget()
-        self._grid_widget.set_layout(self._grid_layout)
-        self._scroll_area.set_widget(self._grid_widget)
-        self._scroll_area.widget_resizable = True
+        self._grid_widget.setLayout(self._grid_layout)
+        self._scroll_area.setWidget(self._grid_widget)
+        self._scroll_area.setWidgetResizable(True)
         self._fill_grid()
 
         # create a placeholder for cell editing widget
         self._right_widget = QWidget()
-        self._right_widget.minimum_width = 250
-        self._right_widget.maximum_width = 250
+        self._right_widget.setMinimumWidth(250)
+        self._right_widget.setMaximumWidth(250)
 
         # add widgets to layout
-        self._layout.add_widget(self._scroll_area)
-        self._layout.add_widget(self._right_widget)
+        self._layout.addWidget(self._scroll_area)
+        self._layout.addWidget(self._right_widget)
 
     def update_grid(self):
         """Update grid representation."""
@@ -57,25 +53,23 @@ class CellGridManagementWidget(QWidget):
         self._cells.clear()
         self._selected_cells = set()
         for i in range(self._grid_layout.count() - 1, -1, -1):
-            self._grid_layout.take_at(i).widget().delete_later()
+            self._grid_layout.takeAt(i).widget().deleteLater()
 
     def _fill_grid(self):
         """Fill grid with cells."""
-
         cells = self._db_session.query(Cell).filter(Cell.tab == self._tab) \
             .order_by(Cell.row).order_by(Cell.column).all()
 
         for cell in cells:
             cell_button = QPushButton()
-            cell_button.text = cell.title
-            cell_button.checkable = True
+            cell_button.setText(cell.title)
+            cell_button.setCheckable(True)
             self._cells[(cell.row, cell.column)] = (cell_button, cell)
 
-            cell_button.size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-            cell_button.minimum_height = 40
-            cell_button.minimum_width = 80
-            self._grid_layout.add_widget(cell_button, cell.row, cell.column, cell.rowspan,
-                                         cell.colspan)
+            cell_button.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
+            cell_button.setMinimumSize(80, 40)
+            self._grid_layout.addWidget(cell_button, cell.row, cell.column, cell.rowspan,
+                                        cell.colspan)
 
             # add cell selection management on button click
             cell_button.toggled.connect(
@@ -86,15 +80,14 @@ class CellGridManagementWidget(QWidget):
             )
 
         # set minimum height for rows
-        for row in range(self._grid_layout.row_count()):
-            self._grid_layout.set_row_minimum_height(row, 40)
-            self._grid_layout.set_row_stretch(row, 1)
-        for column in range(self._grid_layout.column_count()):
-            self._grid_layout.set_column_stretch(column, 1)
+        for row in range(self._grid_layout.rowCount()):
+            self._grid_layout.setRowMinimumHeight(row, 40)
+            self._grid_layout.setRowStretch(row, 1)
+        for column in range(self._grid_layout.columnCount()):
+            self._grid_layout.setColumnStretch(column, 1)
 
     def _press_cell_button(self, row, column):
         """Manages cell selection when pressing cell buttons."""
-
         # enable (if not enabled) or disable (otherwise) cell selection
         if (row, column) in self._selected_cells:
             self._selected_cells.remove((row, column))
@@ -104,7 +97,7 @@ class CellGridManagementWidget(QWidget):
         # set right widget according to selected cells
 
         # remove old widget
-        self._layout.remove_widget(self._right_widget)
+        self._layout.removeWidget(self._right_widget)
         self._right_widget.deleteLater()
 
         if len(self._selected_cells) == 0:  # if no cells selected
@@ -121,8 +114,9 @@ class CellGridManagementWidget(QWidget):
             # set a cell merging widget
             self._set_cell_merging_widget()
 
-        self._right_widget.minimum_width = 250
-        self._layout.add_widget(self._right_widget)
+        self._right_widget.setMinimumWidth(250)
+        self._right_widget.setMaximumWidth(250)
+        self._layout.addWidget(self._right_widget)
 
     def _set_cell_merging_widget(self):
         """Set right widget to cell merging widget."""
@@ -130,8 +124,8 @@ class CellGridManagementWidget(QWidget):
         inner_layout = QHBoxLayout(self._right_widget)
 
         self._merge_button = QPushButton("Merge Cells")
-        self._merge_button.minimum_height = 40
-        inner_layout.add_widget(self._merge_button)
+        self._merge_button.setMinimumHeight(40)
+        inner_layout.addWidget(self._merge_button)
 
         self._merge_button.clicked.connect(self._merge_selected_cells)
 
@@ -144,7 +138,7 @@ class CellGridManagementWidget(QWidget):
             grid = [[False for column in range(grid_size[1])] for row in range(grid_size[0])]
 
             def fill_cell(row, column, rowspan, colspan):
-                """Fill grid with selected cells as atomic cells."""
+                """Fill grid with selected cell as atomic cells."""
                 for i in range(row, row + rowspan):
                     for j in range(column, column + colspan):
                         grid[i][j] = True
@@ -205,7 +199,7 @@ class CellGridManagementWidget(QWidget):
 
         if len(self._selected_cells) < 2:
             # show error message
-            QMessageBox.critical(self, "Error!", "Can merge only two or more cells",
+            QMessageBox.critical(self, "Error!", "Can merge only two or more cells!",
                                  QMessageBox.Ok, QMessageBox.Ok)
             return
 
@@ -213,7 +207,7 @@ class CellGridManagementWidget(QWidget):
                                     (self._tab.grid_height, self._tab.grid_width)):
             self._merge_cell_rectangle()
         else:
-            QMessageBox.critical(self, "Error!", "Can merge only cells that form a rectangle",
+            QMessageBox.critical(self, "Error!", "Can merge only cells that form a rectangle!",
                                  QMessageBox.Ok, QMessageBox.Ok)
 
     def _merge_cell_rectangle(self):
@@ -275,7 +269,7 @@ class CellGridManagementWidget(QWidget):
         # check if only one cell is selected
         if len(self._selected_cells) > 1:
             # show error message
-            QMessageBox.critical(self, "Error!", "Can split only one cells!", QMessageBox.Ok,
+            QMessageBox.critical(self, "Error!", "Can split only one cell!", QMessageBox.Ok,
                                  QMessageBox.Ok)
             return
 
@@ -286,7 +280,7 @@ class CellGridManagementWidget(QWidget):
 
         if cell.rowspan == 1 and cell.colspan == 1:
             # show error message
-            QMessageBox.critical(self, "Error!", "This cell cannot be split!", QMessageBox.Ok,
+            QMessageBox.critical(self, "Error!", "Selected cell cannot be split!", QMessageBox.Ok,
                                  QMessageBox.Ok)
             return
 
@@ -308,4 +302,4 @@ class CellGridManagementWidget(QWidget):
 
     def update_cell_title(self, cell):
         """Update cell title in it's grid representation."""
-        self._cells[cell.row, cell.column][0].text = cell.title
+        self._cells[cell.row, cell.column][0].setText(cell.title)

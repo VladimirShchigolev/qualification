@@ -3,10 +3,6 @@ from PySide6.QtGui import QFont, QRegularExpressionValidator
 from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, \
     QVBoxLayout, QMessageBox, QCheckBox
 
-# enable snake_case for Pyside6
-# noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property
-
 from src.models.models import Configuration
 from src.widgets.sensors.sensor_index_widget import SensorIndexWidget
 from src.widgets.tabs.tab_index_widget import TabIndexWidget
@@ -42,32 +38,32 @@ class ConfigurationCreateEditWidget(QWidget):
         self._layout = QVBoxLayout(self)
 
         self._form_layout = QFormLayout()
-        self._form_layout.horizontal_spacing = 20
-        self._form_layout.vertical_spacing = 20
-        self._form_layout.contents_margins = QMargins(10, 0, 10, 0)
+        self._form_layout.setHorizontalSpacing(20)
+        self._form_layout.setVerticalSpacing(20)
+        self._form_layout.setContentsMargins(10, 0, 10, 0)
 
         # create a title
         if self._edit_mode and not self._returned_to_creation:
             self._title = QLabel()
-            self._title.text = f'Edit Configuration {self._configuration.name}'
-            self._title.font = QFont("Lato", 18)
-            self._title.alignment = Qt.AlignCenter
-            self._title.set_contents_margins(10, 10, 10, 20)
+            self._title.setText(f'Edit Configuration {self._configuration.name}')
+            self._title.setFont(QFont("Lato", 18))
+            self._title.setAlignment(Qt.AlignCenter)
+            self._title.setContentsMargins(10, 10, 10, 20)
 
-            self._form_layout.add_row(self._title)
+            self._form_layout.addRow(self._title)
 
         # create name field display
         self._name_line = QLineEdit()
-        self._name_line.text = self._configuration.name
+        self._name_line.setText(self._configuration.name)
 
         # set validation rules to 1-30 characters in length
-        self._name_line.set_validator(
+        self._name_line.setValidator(
             QRegularExpressionValidator(QRegularExpression(r'.{1,30}'))
         )
         self._name_line.textChanged.connect(self._update_name)
 
         self._show_unknown_sensors = QCheckBox()
-        self._show_unknown_sensors.checked = self._configuration.show_unknown_sensors
+        self._show_unknown_sensors.setChecked(self._configuration.show_unknown_sensors)
 
         self._show_unknown_sensors.clicked.connect(self._update_showing_unknown_sensors)
 
@@ -81,52 +77,52 @@ class ConfigurationCreateEditWidget(QWidget):
 
         self._sensors_widget = SensorIndexWidget(self._db_session, self._configuration,
                                                  configuration_page=page)
-        self._sensors_and_tabs_layout.add_widget(self._sensors_widget)
+        self._sensors_and_tabs_layout.addWidget(self._sensors_widget)
 
         self._tabs_widget = TabIndexWidget(self._db_session, self._configuration,
                                            configuration_page=page)
-        self._sensors_and_tabs_layout.add_widget(self._tabs_widget)
+        self._sensors_and_tabs_layout.addWidget(self._tabs_widget)
 
         # section of buttons
         self._buttons_layout = QHBoxLayout()
-        self._buttons_layout.contents_margins = QMargins(10, 0, 10, 0)
+        self._buttons_layout.setContentsMargins(10, 0, 10, 0)
 
         self._save_button = QPushButton("Save")
         self._save_button.clicked.connect(self._save)
         self._cancel_button = QPushButton("Cancel")
         self._cancel_button.clicked.connect(self._cancel)
 
-        self._buttons_layout.add_widget(self._save_button)
+        self._buttons_layout.addWidget(self._save_button)
 
         # move cancel button to the right
-        self._buttons_layout.add_stretch(1)
+        self._buttons_layout.addStretch(1)
 
-        self._buttons_layout.add_widget(self._cancel_button)
+        self._buttons_layout.addWidget(self._cancel_button)
 
         # add widgets to layout
-        self._form_layout.add_row("Name:", self._name_line)
-        self._form_layout.add_row("Show unknown sensors:", self._show_unknown_sensors)
-        self._layout.add_layout(self._form_layout)
-        self._layout.add_layout(self._sensors_and_tabs_layout)
+        self._form_layout.addRow("Name:", self._name_line)
+        self._form_layout.addRow("Show unknown sensors:", self._show_unknown_sensors)
+        self._layout.addLayout(self._form_layout)
+        self._layout.addLayout(self._sensors_and_tabs_layout)
 
         # add buttons
-        self._layout.add_layout(self._buttons_layout)
+        self._layout.addLayout(self._buttons_layout)
 
     def _update_name(self):
         """Update configuration name."""
-        name = self._name_line.text
+        name = self._name_line.text()
         self._configuration.name = name
 
     def _update_showing_unknown_sensors(self):
         """Update option of showing unknown sensors."""
-        show = self._show_unknown_sensors.checked
+        show = self._show_unknown_sensors.isChecked()
         self._configuration.show_unknown_sensors = show
 
     def _save(self):
         """Save configuration from data in the form."""
         # get data from the form
-        name = self._name_line.text
-        include_unknown_sensor_tab = self._show_unknown_sensors.checked
+        name = self._name_line.text()
+        include_unknown_sensor_tab = self._show_unknown_sensors.isChecked()
 
         # check for duplicates is needed
         # only when configuration name gets changed
@@ -171,4 +167,4 @@ class ConfigurationCreateEditWidget(QWidget):
 
     def _return_to_configurations(self):
         """Open configurations index page."""
-        self.parent_widget().index_configurations()
+        self.parentWidget().index_configurations()

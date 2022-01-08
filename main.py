@@ -1,29 +1,37 @@
+import sys
+
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
-# noinspection PyUnresolvedReferences
-from __feature__ import snake_case, true_property  # snake_case enabled for Pyside6
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.widgets.configuration_settings_window import ConfigurationSettingsWindow
+from src.widgets.main_window import MainWindow
 
 
 def main():
-    """ Starts the main window """
+    """Starts the main window."""
     # connect to the database
     engine = create_engine('sqlite:///configurations.db')
     session_cls = sessionmaker(bind=engine)
-    db_session = session_cls()
 
     app = QApplication([])
-    app.set_font(QFont("Lato", 12, QFont.Normal))
+    app.setFont(QFont("Lato", 12, QFont.Normal))
 
-    window = ConfigurationSettingsWindow(db_session)
+    window = MainWindow(session_cls)
     window.show()
 
     app.exec()
-    db_session.close()
 
+
+def excepthook(cls, exception, traceback):
+    """Ignores TypeError thrown by pyqtgraph bug"""
+    if not (cls is TypeError
+            and str(exception).strip().endswith("native Qt signal is not callable")):
+        raise exception
+
+
+sys.excepthook = excepthook
 
 if __name__ == '__main__':
     main()

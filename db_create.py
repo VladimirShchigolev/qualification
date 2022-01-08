@@ -3,7 +3,7 @@ import sqlite3
 
 
 def create_tables(database):
-    """ Create database tables if they don't exist
+    """Create database tables if they don't exist.
     :parameter database: Database connection object
     :return: None
     throws sqlite3.Error exception
@@ -13,9 +13,6 @@ def create_tables(database):
                                              id integer PRIMARY KEY,
                                              name text NOT NULL UNIQUE,
                                              show_unknown_sensors integer NOT NULL DEFAULT 0,
-                                             show_model integer NOT NULL DEFAULT 0,
-                                             model_chamber_text text DEFAULT NULL,
-                                             model_control_text text DEFAULT NULL,
                                              active integer NOT NULL DEFAULT 0
                                          );"""
 
@@ -26,7 +23,7 @@ def create_tables(database):
                                       name text NOT NULL,
                                       physical_value text NOT NULL,
                                       physical_unit text NOT NULL,
-                                      FOREIGN KEY (configuration_id) REFERENCES configuration (id) ON DELETE CASCADE
+                                      FOREIGN KEY (configuration_id) REFERENCES configurations (id) ON DELETE CASCADE
                                   );"""
 
     sql_create_tab_table = """CREATE TABLE IF NOT EXISTS tab (
@@ -35,7 +32,7 @@ def create_tables(database):
                                   name text NOT NULL,
                                   grid_width integer NOT NULL DEFAULT 2,
                                   grid_height integer NOT NULL DEFAULT 5,
-                                  FOREIGN KEY (configuration_id) REFERENCES configuration (id) 
+                                  FOREIGN KEY (configuration_id) REFERENCES configurations (id) 
                                                                  ON DELETE CASCADE
                               );"""
 
@@ -78,32 +75,21 @@ def create_tables(database):
 
 
 def insert_default(database):
-    """ Insert default configuration values if they don't exist
+    """Insert default configuration values if they don't exist.
     :parameter database: Database connection object
     :return: None
     throws sqlite3.Error exception
     """
 
-    # check if default configuration exists
+    # check if default configurations exists
     cursor = database.cursor()
     cursor.execute("SELECT id FROM configuration WHERE name='Default'")
     rows = cursor.fetchall()
 
-    if len(rows) == 0:  # Default configuration doesn't exist
-        # insert default configuration and unknown sensor tab for the configuration
+    if len(rows) == 0:  # Default configurations doesn't exist
+        # insert default configurations and unknown sensor tab for the configurations
         cursor.execute("""INSERT INTO configuration
-                          VALUES (NULL, 'Default', 1, 0, NULL, NULL, 1);""")
-
-        configuration_id = cursor.lastrowid  # id of the default configuration
-        cursor.execute("""INSERT INTO tab
-                          VALUES (NULL, ?, 'Unknown', 5, 20);""", (configuration_id,))
-
-        # insert 100 cells for the "Unknown" tab
-        tab_id = cursor.lastrowid  # id of the "Unknown" tab
-        for row in range(20):
-            for column in range(5):
-                cursor.execute("""INSERT INTO cell (tab_id, row, column)
-                                  VALUES (?, ?, ?)""", (tab_id, row, column))
+                          VALUES (NULL, 'Default', 1, 1);""")
 
     # check if default address exists
     cursor.execute("SELECT id FROM address WHERE ip_port='127.0.0.1:64363'")
@@ -117,7 +103,7 @@ def insert_default(database):
 
 
 def main():
-    """ Create the configuration database, its tables and add the default configuration """
+    """Create the configurations database, its tables and add the default configurationю"""
     # create a new database
     database = None
     try:
@@ -134,7 +120,7 @@ def main():
         database.close()  # in case of an error close the connection to the DB
         return  # and stop
 
-    # add default configuration if it doesn't exist
+    # add default configurations if it doesn't exist
     try:
         insert_default(database)
     except sqlite3.Error as error:
