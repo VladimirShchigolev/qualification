@@ -9,6 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import Configuration
 from src.widgets.configuration_settings_window import ConfigurationSettingsWindow
+from src.widgets.console_widget import ConsoleWidget
 from src.widgets.graphs.graph_tab_widget import GraphTabWidget
 
 
@@ -26,9 +27,10 @@ class MainWindow(QMainWindow):
 
         # set window size
         self.setMinimumSize(800, 600)
-        #self.showMaximized()
+        self.showMaximized()
 
         self._init_ui()
+        self._console = ConsoleWidget()
 
         # load active configuration
         self._load_configuration()
@@ -65,6 +67,9 @@ class MainWindow(QMainWindow):
         self._action_configurations = QAction(self)
         self._action_configurations.setText("Configurations")
 
+        self._action_console = QAction(self)
+        self._action_console.setText("Console")
+
         # add actions to the menu
         self._menu_file.addActions(
             [self._action_new,
@@ -76,10 +81,13 @@ class MainWindow(QMainWindow):
         self._menu_settings.addAction(self._action_configurations)
         self._menu_bar.addAction(self._menu_settings.menuAction())
 
+        self._menu_bar.addAction(self._action_console)
+
         # self.actionNew.triggered.connect(self.start_new_session)
         # self.actionOpen.triggered.connect(self.open_record)
         # self.actionRecord.triggered.connect(self.record)
         self._action_configurations.triggered.connect(self._open_configurations)
+        self._action_console.triggered.connect(self._open_console)
 
         self._tabs = QWidget()
         self.setCentralWidget(self._tabs)
@@ -95,6 +103,12 @@ class MainWindow(QMainWindow):
         print(self._graphs)
         self.setCentralWidget(self._tabs)
 
+    def _open_console(self):
+        """Opens console window."""
+        if not self._console.isVisible():
+            self._console.show()
+        self._console.activateWindow()  # bring to front
+
     def _load_configuration(self):
         """Loads active configuration and updates ui"""
         db_session = self._session_maker()
@@ -108,7 +122,6 @@ class MainWindow(QMainWindow):
                                  QMessageBox.Ok)
             raise
 
-        print(configuration)
         if configuration:
             self._init_visualization(configuration)
 
@@ -116,12 +129,12 @@ class MainWindow(QMainWindow):
 
     def _open_configurations(self):
         """Open configuration settings window."""
-
         self._configurations_window = ConfigurationSettingsWindow(self._session_maker)
         self._configurations_window.show()
 
     def _connect(self):
         """Connect to data source."""
+        self._socket.abort()
         self._socket.connectToHost("127.0.0.1", 64363)
 
     def _read_from_socket(self):
@@ -134,29 +147,27 @@ class MainWindow(QMainWindow):
     def _process_data(self, line):
         """Process the data in the given string."""
         def check_correctness(data):
-            correct_format = True
+            correct = True
             # check if obligatory fields are in data
-            if correct_format and ("timestamp" not in data or "sensors" not in data
-                                   or not isinstance(data["sensors"], dict)):
-                correct_format = False
+            if correct and ("timestamp" not in data or "sensors" not in data
+                            or not isinstance(data["sensors"], dict)):
+                correct = False
 
-            print("uno", correct_format)
             # check if timestamp format is correct
             if not re.match('^[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}$', data["timestamp"]):
-                correct_format = False
-            print("duo", correct_format)
+                correct = False
+
             # check if values of sensors are numbers
-            if correct_format:
+            if correct:
                 for sensor_value in data["sensors"].values():
-                    print(sensor_value)
                     if not (isinstance(sensor_value, int) or isinstance(sensor_value, float)):
-                        correct_format = False
+                        correct = False
                         break
 
-            return correct_format
+            return correct
 
         if len(line) > 6000:
-            print("Line is too long: " + line[:6000] + "...")
+            self._console.print("Line is too long: " + line[:6000] + "...", warning=True)
         else:
             correct_format = True
             try:
@@ -170,9 +181,9 @@ class MainWindow(QMainWindow):
 
             if correct_format:
                 self._update_graphs(data)
-                print(line)
+                self._console.print(line)
             else:
-                print("Wrong format: " + line)
+                self._console.print("Wrong format: " + line, warning=True)
 
     def _update_graphs(self, data):
         """Add new points to the graphs."""

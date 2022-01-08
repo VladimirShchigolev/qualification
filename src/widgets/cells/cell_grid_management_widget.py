@@ -138,7 +138,7 @@ class CellGridManagementWidget(QWidget):
             grid = [[False for column in range(grid_size[1])] for row in range(grid_size[0])]
 
             def fill_cell(row, column, rowspan, colspan):
-                """Fill grid with selected cells as atomic cells."""
+                """Fill grid with selected cell as atomic cells."""
                 for i in range(row, row + rowspan):
                     for j in range(column, column + colspan):
                         grid[i][j] = True
@@ -199,7 +199,7 @@ class CellGridManagementWidget(QWidget):
 
         if len(self._selected_cells) < 2:
             # show error message
-            QMessageBox.critical(self, "Error!", "Can merge only two or more cells",
+            QMessageBox.critical(self, "Error!", "Can merge only two or more cells!",
                                  QMessageBox.Ok, QMessageBox.Ok)
             return
 
@@ -207,7 +207,7 @@ class CellGridManagementWidget(QWidget):
                                     (self._tab.grid_height, self._tab.grid_width)):
             self._merge_cell_rectangle()
         else:
-            QMessageBox.critical(self, "Error!", "Can merge only cells that form a rectangle",
+            QMessageBox.critical(self, "Error!", "Can merge only cells that form a rectangle!",
                                  QMessageBox.Ok, QMessageBox.Ok)
 
     def _merge_cell_rectangle(self):
@@ -269,7 +269,7 @@ class CellGridManagementWidget(QWidget):
         # check if only one cell is selected
         if len(self._selected_cells) > 1:
             # show error message
-            QMessageBox.critical(self, "Error!", "Can split only one cells!", QMessageBox.Ok,
+            QMessageBox.critical(self, "Error!", "Can split only one cell!", QMessageBox.Ok,
                                  QMessageBox.Ok)
             return
 
@@ -280,7 +280,7 @@ class CellGridManagementWidget(QWidget):
 
         if cell.rowspan == 1 and cell.colspan == 1:
             # show error message
-            QMessageBox.critical(self, "Error!", "This cell cannot be split!", QMessageBox.Ok,
+            QMessageBox.critical(self, "Error!", "Selected cell cannot be split!", QMessageBox.Ok,
                                  QMessageBox.Ok)
             return
 
