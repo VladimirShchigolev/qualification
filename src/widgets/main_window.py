@@ -1,9 +1,11 @@
 import json
+import os
 import re
 
 from PySide6.QtGui import QAction
 from PySide6.QtNetwork import QTcpSocket, QHostAddress
-from PySide6.QtWidgets import QMainWindow, QMenuBar, QMenu, QStatusBar, QWidget, QMessageBox
+from PySide6.QtWidgets import QMainWindow, QMenuBar, QMenu, QStatusBar, QWidget, QMessageBox, \
+    QFileDialog
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -33,13 +35,21 @@ class MainWindow(QMainWindow):
         self._console = ConsoleWidget()
 
         # load active configuration
+        self._configuration = None
         self._load_configuration()
+
+        # set up recording control
+        self._recording = False
+        self._record_file = None
 
         # set up TCP socket
         self._socket = QTcpSocket(self)
         self._socket.readyRead.connect(self._read_from_socket)
         self._socket.errorOccurred.connect(self._show_socket_error)
-        self._connect()
+
+        # set state
+        self._active_session = False
+        self._opened_file = False
 
     def _init_ui(self):
         """Initialize UI."""
@@ -61,6 +71,10 @@ class MainWindow(QMainWindow):
         self._action_open = QAction(self)
         self._action_open.setText("Open Recording")
 
+        self._action_close = QAction(self)
+        self._action_close.setText("Close Session")
+        self._action_close.setDisabled(True)
+
         self._action_record = QAction(self)
         self._action_record.setText("Start Recording")
 
@@ -76,6 +90,13 @@ class MainWindow(QMainWindow):
              self._action_open,
              self._action_record]
         )
+        self._menu_file.addAction(self._action_new)
+        self._menu_file.addAction(self._action_open)
+        self._menu_file.addSeparator()
+        self._menu_file.addAction(self._action_close)
+        self._menu_file.addSeparator()
+        self._menu_file.addAction(self._action_record)
+
         self._menu_bar.addAction(self._menu_file.menuAction())
 
         self._menu_settings.addAction(self._action_configurations)
@@ -83,9 +104,10 @@ class MainWindow(QMainWindow):
 
         self._menu_bar.addAction(self._action_console)
 
-        # self.actionNew.triggered.connect(self.start_new_session)
-        # self.actionOpen.triggered.connect(self.open_record)
-        # self.actionRecord.triggered.connect(self.record)
+        self._action_new.triggered.connect(self._start_new_session)
+        self._action_open.triggered.connect(self._open_record)
+        self._action_close.triggered.connect(self._stop_session)
+        self._action_record.triggered.connect(self._record)
         self._action_configurations.triggered.connect(self._open_configurations)
         self._action_console.triggered.connect(self._open_console)
 
@@ -109,13 +131,12 @@ class MainWindow(QMainWindow):
             self._console.show()
         self._console.activateWindow()  # bring to front
 
-    def _load_configuration(self):
-        """Loads active configuration and updates ui"""
+    def _load_configuration(self, name=None):
+        """Loads configuration and updates ui"""
         db_session = self._session_maker()
         try:
-            configuration = Configuration.load(db_session)
+            configuration = Configuration.load(db_session, name=name)
         except SQLAlchemyError as e:
-            print(e)
             configuration = None
             # show error message
             QMessageBox.critical(self, "Error!", "Cannot load the configuration!", QMessageBox.Ok,
@@ -123,6 +144,7 @@ class MainWindow(QMainWindow):
             raise
 
         if configuration:
+            self._configuration = configuration
             self._init_visualization(configuration)
 
         db_session.close()
@@ -132,8 +154,110 @@ class MainWindow(QMainWindow):
         self._configurations_window = ConfigurationSettingsWindow(self._session_maker)
         self._configurations_window.show()
 
+    def _record(self):
+        """Enables or disables recording."""
+        if self._recording:
+            try:
+                self._record_file.close()
+            except (OSError, IOError):
+                QMessageBox.critical(self, "Error!", f'Error while closing file',
+                                     QMessageBox.Ok, QMessageBox.Ok)
+            finally:
+                self._recording = False
+                self._action_record.setText("Start Recording")
+        else:
+            filename, _ = QFileDialog.getSaveFileName(self, filter="Text files (*.txt)")
+            if filename:
+                # open the file and handle possible exceptions
+                try:
+                    self._record_file = open(filename, 'w')
+                except (OSError, IOError):
+                    QMessageBox.critical(self, "Error!", f'Unable to create file!',
+                                         QMessageBox.Ok, QMessageBox.Ok)
+                    self._record_file = None
+
+                # start recording if file created successfully
+                if self._record_file:
+                    self._recording = True
+                    self._action_record.setText("Stop Recording")
+                    self._record_file.write(
+                        f'{"configuration": "{self._configuration.name}"}')
+
+    def _open_record(self):
+        """Open record file."""
+        self._stop_session()
+
+        filename, _ = QFileDialog.getOpenFileName(self, "Open recording",
+                                                  filter="Text files (*.txt)")
+        try:
+            file = open(filename, 'r')
+        except FileNotFoundError:
+            QMessageBox.critical(self, "Error!", f'File {filename} not found!',
+                                 QMessageBox.Ok, QMessageBox.Ok)
+            file = None
+        except (IOError, OSError):
+            QMessageBox.critical(self, "Error!", f'Unable to open the file!',
+                                 QMessageBox.Ok, QMessageBox.Ok)
+            file = None
+
+        if file:
+            # check if file format is OK
+            if '\n' not in file.read(10000):
+                QMessageBox.critical(self, "Error!", f'Wrong file format!',
+                                     QMessageBox.Ok, QMessageBox.Ok)
+                self._stop_session()
+                return
+            file.seek(0)
+
+            first_line = file.readline()
+            try:
+                configuration_suggestion = json.loads(first_line.strip())
+            except json.JSONDecodeError:
+                configuration_suggestion = None
+
+            if configuration_suggestion and "configuration" in configuration_suggestion:
+                configuration = Configuration.find(configuration_suggestion["configuration"])
+                if configuration is not None:
+                    confirmation = QMessageBox.question(
+                        self, "Select configuration",
+                        f'Configuration {configuration.name} is suggested. Load it?',
+                        QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes
+                    )
+                    if confirmation == QMessageBox.Yes:
+                        self._load_configuration(configuration)
+
+                line = file.readline()
+            else:
+                line = first_line
+
+            # process the data in file
+            while line:
+                self._process_data(line)
+                line = file.readline()
+
+            file.close()
+            self._action_close.setDisabled(False)
+
+    def _stop_session(self):
+        """Stop active session of file reading session."""
+        if self._active_session:
+            self._socket.disconnectFromHost()
+            self._active_session = False
+        self._load_configuration()
+        self._opened_file = False
+
+        self._action_close.setDisabled(True)
+
+    def _start_new_session(self):
+        """Start new active session."""
+        self._stop_session()
+        self._active_session = True
+        self._action_close.setDisabled(False)
+        self._connect()
+
     def _connect(self):
         """Connect to data source."""
+        self._active_session = True
         self._socket.abort()
         self._socket.connectToHost("127.0.0.1", 64363)
 
@@ -166,9 +290,24 @@ class MainWindow(QMainWindow):
 
             return correct
 
+        # save to file if recording is enabled
+        if self._recording:
+            try:
+                self._record_file.write(line+"\n")
+                # save changes to the file
+                self._record_file.flush()
+                os.fsync(self._record_file.fileno())
+            except (OSError, IOError):
+                QMessageBox.critical(self, "Error!",
+                                     'Unable to write to file! Recording stopped!',
+                                     QMessageBox.Ok, QMessageBox.Ok)
+                # stop recording
+                self._record()
+
         if len(line) > 6000:
             self._console.print("Line is too long: " + line[:6000] + "...", warning=True)
         else:
+            # check if data format is correct
             correct_format = True
             try:
                 data = json.loads(line)
@@ -180,6 +319,7 @@ class MainWindow(QMainWindow):
                 correct_format = check_correctness(data)
 
             if correct_format:
+                # show new data on graphs and in the console
                 self._update_graphs(data)
                 self._console.print(line)
             else:

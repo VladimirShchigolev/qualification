@@ -43,9 +43,14 @@ class Configuration(Base):
         return True
 
     @staticmethod
-    def load(db_session):
-        """Load active configuration from"""
-        configuration = db_session.query(Configuration).filter(Configuration.active == True).one_or_none()
+    def load(db_session, name=None):
+        """Load active or selected configuration from DB."""
+        if name is None:
+            configuration = db_session.query(Configuration) \
+                .filter(Configuration.active == True).one_or_none()
+        else:
+            configuration = db_session.query(Configuration) \
+                .filter(Configuration.name == name).one_or_none()
         return configuration
 
 
