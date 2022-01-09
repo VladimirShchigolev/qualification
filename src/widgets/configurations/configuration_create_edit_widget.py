@@ -1,9 +1,9 @@
-from PySide6.QtCore import Qt, QMargins, QRegularExpression
+from PySide6.QtCore import Qt, QRegularExpression
 from PySide6.QtGui import QFont, QRegularExpressionValidator
 from PySide6.QtWidgets import QWidget, QLabel, QFormLayout, QLineEdit, QHBoxLayout, QPushButton, \
     QVBoxLayout, QMessageBox, QCheckBox
 
-from src.models.models import Configuration
+from src.models.models import Configuration, Tab, Sensor
 from src.widgets.sensors.sensor_index_widget import SensorIndexWidget
 from src.widgets.tabs.tab_index_widget import TabIndexWidget
 
@@ -137,13 +137,28 @@ class ConfigurationCreateEditWidget(QWidget):
             QMessageBox.critical(self, "Error!", str(error), QMessageBox.Ok,
                                  QMessageBox.Ok)  # show error message
 
+        if validation_passed:
+            tabs = self._db_session.query(Tab).filter(Tab.configuration == self._configuration).all()
+            if not tabs and not include_unknown_sensor_tab:
+                # show error message
+                QMessageBox.critical(self, "Error!", "Number of tabs cannot be zero", QMessageBox.Ok,
+                                     QMessageBox.Ok)
+                validation_passed = False
+
+        if validation_passed:
+            sensors = self._db_session.query(Sensor).filter(Sensor.configuration == self._configuration).all()
+            if not sensors:
+                confirmation = QMessageBox.warning(self, "Warning", "Number of sensors is zero!",
+                                                   QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Cancel)
+                validation_passed = confirmation == QMessageBox.Ok
+
         if validation_passed:  # if data is valid
             # set data to created/edited configuration object
             self._configuration.name = name
             self._configuration.show_unknown_sensors = include_unknown_sensor_tab
 
             # set message according to selected mode (create or edit)
-            if self._edit_mode:
+            if self._edit_mode and not self._returned_to_creation:
                 message = f'Configuration {self._configuration.name} updated successfully!'
             else:
                 message = f'Configuration {self._configuration.name} created successfully!'

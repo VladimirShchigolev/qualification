@@ -29,12 +29,11 @@ class Configuration(Base):
         """Check if given fields are valid."""
 
         if check_for_duplicates:
-            # check if sensor with such short name
-            # exists in this configuration
-            sensor = db_session.query(Configuration).filter(
+            # check if configuration with such name exists
+            configuration = db_session.query(Configuration).filter(
                 Configuration.name == name).one_or_none()
-            if sensor:
-                raise ValueError("A configuration with such short name already exists!")
+            if configuration:
+                raise ValueError("A configuration with such name already exists!")
 
         # name length
         if not 1 <= len(name) <= 30:
@@ -171,6 +170,13 @@ class Tab(Base):
     def validate(configuration, name, grid_width, grid_height, check_for_duplicates=True,
                  db_session=None):
         """Check if given fields are valid."""
+
+        tabs = db_session.query(Tab).filter(Tab.configuration == configuration).all()
+        if len(tabs) == 10:
+            raise ValueError("Tab limit of 10 tabs is reached for this configuration!")
+
+        if name.lower() == 'unknown':
+            raise ValueError('Tab name "Unknown" is reserved!')
 
         if check_for_duplicates:
             # check if a tab with such name exists in the configuration

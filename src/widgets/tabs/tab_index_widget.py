@@ -116,5 +116,9 @@ class TabIndexWidget(QWidget):
 
     def _create_tab(self):
         """Open a tab creating page."""
-        self.parentWidget().parentWidget().create_tab(self._configuration,
-                                                      self._configuration_page)
+        tabs = self._db_session.query(Tab).filter(Tab.configuration == self._configuration).all()
+        if len(tabs) == 10:
+            raise ValueError("Tab limit of 10 tabs is reached for this configuration!")
+        else:
+            self.parentWidget().parentWidget().create_tab(self._configuration,
+                                                          self._configuration_page)
