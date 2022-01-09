@@ -406,4 +406,5 @@ class MainWindow(QMainWindow):
     def close_event(self, event):
         """Finish work with resources before closing."""
         self._tabs.close()
+        self._stop_session()
         event.accept()

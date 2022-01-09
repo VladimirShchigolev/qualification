@@ -1,7 +1,7 @@
 import re
 
 from PySide6.QtGui import QFont
-from pyqtgraph import PlotWidget, mkPen
+from pyqtgraph import PlotWidget, mkPen, LegendItem
 
 
 class GraphWidget(PlotWidget):
@@ -71,8 +71,8 @@ class GraphWidget(PlotWidget):
         self.setMenuEnabled(enableMenu=False)  # disable viewBox menu
         self.setMenuEnabled(enableMenu=True, enableViewBoxMenu=None)
 
-        colors = ["#2f4b7c", "#a05195", "#d45087", "#f95d6a",
-                  "#ff7c43", "#ffa600", "#003f5c", "#2f4b7c"]
+        colors = ["#2f4b7c", "#a05195", "#d45087", "#f95d6a", "#ff7c43",
+                  "#ffa600", "#003f5c", "#2f4b7c", "#4fa511", "#006aff"]
 
         # set data lines
         self._data_lines = {}
@@ -80,10 +80,16 @@ class GraphWidget(PlotWidget):
         self._y = {}
         if not unknown_sensor:
             sensor_number = 0
+            if len(self._sensors) > 1:
+                legend = LegendItem(offset=(60, 30), brush="eeeeee70")
+                legend.setParentItem(self.getPlotItem())
             for sensor in self._sensors:
                 color = colors[sensor_number]
-                self._data_lines[sensor.short_name] = self.plot(name=sensor.short_name,
+                self._data_lines[sensor.short_name] = self.plot(name=sensor.name,
                                                                 pen=mkPen(color, width=2))
+
+                if len(self._sensors) > 1:
+                    legend.addItem(self._data_lines[sensor.short_name], sensor.name)
                 self._x[sensor.short_name] = []
                 self._y[sensor.short_name] = []
 

@@ -183,6 +183,25 @@ class CellEditWidget(QWidget):
                                  QMessageBox.Ok, QMessageBox.Ok)
             return
 
+        # check for 10 sensor per cell limit
+        sensors_in_cell = self._db_session.query(SensorCell).filter(SensorCell.cell == self._cell).all()
+        if len(sensors_in_cell) >= 10:
+            # show error message
+            QMessageBox.critical(self, "Error!", "Sensor count limit of 10 is reached for this cell!",
+                                 QMessageBox.Ok, QMessageBox.Ok)
+            return
+
+        # check for 200 graphs in the configuration
+        total_graphs = self._db_session.query(SensorCell) \
+            .join(Sensor) \
+            .filter(Sensor.configuration == self._cell.tab.configuration) \
+            .all()
+        if len(total_graphs) >= 200:
+            # show error message
+            QMessageBox.critical(self, "Error!", "Graph count limit of 200 is reached for this configuration!",
+                                 QMessageBox.Ok, QMessageBox.Ok)
+            return
+
         # check if sensor type conforms already assigned sensors
         assigned_sensor = self._db_session.query(Sensor) \
             .join(SensorCell) \
