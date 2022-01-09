@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QMainWindow, QMenuBar, QMenu, QStatusBar, QWidget,
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import Configuration, Address
-from src.widgets.adress_window import AddressWindow
+from src.widgets.address_window import AddressWindow
 from src.widgets.configuration_settings_window import ConfigurationSettingsWindow
 from src.widgets.console_widget import ConsoleWidget
 from src.widgets.graphs.graph_tab_widget import GraphTabWidget

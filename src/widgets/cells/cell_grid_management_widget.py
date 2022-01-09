@@ -54,6 +54,13 @@ class CellGridManagementWidget(QWidget):
         self._selected_cells = set()
         for i in range(self._grid_layout.count() - 1, -1, -1):
             self._grid_layout.takeAt(i).widget().deleteLater()
+        self._grid_layout.deleteLater()
+        self._grid_widget.deleteLater()
+
+        self._grid_layout = QGridLayout()
+        self._grid_widget = QWidget()
+        self._grid_widget.setLayout(self._grid_layout)
+        self._scroll_area.setWidget(self._grid_widget)
 
     def _fill_grid(self):
         """Fill grid with cells."""
