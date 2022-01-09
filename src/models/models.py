@@ -190,9 +190,9 @@ class Tab(Base):
                  db_session=None):
         """Check if given fields are valid."""
 
-        tabs = db_session.query(Tab).filter(Tab.configuration == configuration).all()
-        if len(tabs) == 10:
-            raise ValueError("Tab limit of 10 tabs is reached for this configuration!")
+        # tabs = db_session.query(Tab).filter(Tab.configuration == configuration).all()
+        # if len(tabs) == 10:
+        #     raise ValueError("Tab limit of 10 tabs is reached for this configuration!")
 
         if name.lower() == 'unknown':
             raise ValueError('Tab name "Unknown" is reserved!')
