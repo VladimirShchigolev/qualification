@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QMainWindow, QMenuBar, QMenu, QStatusBar, QWidget,
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import Configuration
+from src.widgets.adress_window import AddressWindow
 from src.widgets.configuration_settings_window import ConfigurationSettingsWindow
 from src.widgets.console_widget import ConsoleWidget
 from src.widgets.graphs.graph_tab_widget import GraphTabWidget
@@ -81,6 +82,9 @@ class MainWindow(QMainWindow):
         self._action_configurations = QAction(self)
         self._action_configurations.setText("Configurations")
 
+        self._action_data_source = QAction(self)
+        self._action_data_source.setText("Data Source")
+
         self._action_console = QAction(self)
         self._action_console.setText("Console")
 
@@ -100,15 +104,18 @@ class MainWindow(QMainWindow):
         self._menu_bar.addAction(self._menu_file.menuAction())
 
         self._menu_settings.addAction(self._action_configurations)
+        self._menu_settings.addAction(self._action_data_source)
         self._menu_bar.addAction(self._menu_settings.menuAction())
 
         self._menu_bar.addAction(self._action_console)
 
+        # connect actions to methods
         self._action_new.triggered.connect(self._start_new_session)
         self._action_open.triggered.connect(self._open_record)
         self._action_close.triggered.connect(self._stop_session)
         self._action_record.triggered.connect(self._record)
         self._action_configurations.triggered.connect(self._open_configurations)
+        self._action_data_source.triggered.connect(self._open_data_source_settings)
         self._action_console.triggered.connect(self._open_console)
 
         self._tabs = QWidget()
@@ -153,6 +160,13 @@ class MainWindow(QMainWindow):
         """Open configuration settings window."""
         self._configurations_window = ConfigurationSettingsWindow(self._session_maker)
         self._configurations_window.show()
+
+    def _open_data_source_settings(self):
+        """Open data source settings window."""
+        db_session = self._session_maker()
+        self._data_source_settings_window = AddressWindow(db_session)
+        self._data_source_settings_window.show()
+        db_session.close()
 
     def _record(self):
         """Enables or disables recording."""
