@@ -169,16 +169,19 @@ class SensorCreateEditWidget(QWidget):
         physical_value = self._physical_value_line.currentText()
         physical_unit = self._physical_unit_line.currentText()
 
+        if physical_value == "-":
+            physical_value = ""
+        if physical_unit == "-":
+            physical_unit = ""
+
         # if short name gets changed, check for duplicates
         check_for_duplicates = self._sensor.short_name != short_name
 
         # check if data is valid
         validation_passed = False
         try:
-            validation_passed = Sensor.validate(self._sensor.configuration, short_name, name,
-                                                physical_value,
-                                                physical_unit,
-                                                check_for_duplicates=check_for_duplicates,
+            validation_passed = Sensor.validate(self._sensor.configuration, short_name, name, physical_value,
+                                                physical_unit, check_for_duplicates=check_for_duplicates,
                                                 db_session=self._db_session)
         except ValueError as error:
             # show error message

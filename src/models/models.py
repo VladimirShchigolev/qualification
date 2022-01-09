@@ -101,8 +101,7 @@ class Sensor(Base):
         return self.short_name
 
     @staticmethod
-    def validate(configuration, short_name, name, physical_value, physical_unit,
-                 check_for_duplicates=True,
+    def validate(configuration, short_name, name, physical_value, physical_unit, check_for_duplicates=True,
                  db_session=None):
         """Check if given fields are valid."""
 
@@ -130,12 +129,15 @@ class Sensor(Base):
             raise ValueError("Name should be 1 to 30 characters long!")
 
         # physical value length
-        if not 1 <= len(physical_value) <= 40:
+        if not 0 <= len(physical_value) <= 40:
             raise ValueError("Physical value should be 1 to 40 characters long!")
 
         # physical unit length
-        if not 1 <= len(physical_unit) <= 10:
+        if not 0 <= len(physical_unit) <= 10:
             raise ValueError("Physical unit should be 1 to 10 characters long!")
+
+        if physical_unit and not physical_value:
+            raise ValueError("Physical value cannot be empty while physical unit is set!")
 
         return True
 
