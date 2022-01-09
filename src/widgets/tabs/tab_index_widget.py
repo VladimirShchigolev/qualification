@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, \
-    QLabel, QHBoxLayout, QPushButton
+    QLabel, QHBoxLayout, QPushButton, QMessageBox
 
 from src.models.models import Tab
 
@@ -118,7 +118,8 @@ class TabIndexWidget(QWidget):
         """Open a tab creating page."""
         tabs = self._db_session.query(Tab).filter(Tab.configuration == self._configuration).all()
         if len(tabs) == 10:
-            raise ValueError("Tab limit of 10 tabs is reached for this configuration!")
+            QMessageBox.critical(self, "Error!", "Tab limit of 10 tabs is reached for this configuration!",
+                                 QMessageBox.Ok, QMessageBox.Ok)
         else:
             self.parentWidget().parentWidget().create_tab(self._configuration,
                                                           self._configuration_page)
