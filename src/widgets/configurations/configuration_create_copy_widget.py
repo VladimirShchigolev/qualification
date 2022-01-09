@@ -187,4 +187,4 @@ class ConfigurationCreateCopyWidget(QWidget):
 
     def _return_to_configurations(self):
         """Open configurations index page."""
-        self.parent_widget().index_configurations()
+        self.parentWidget().index_configurations()
