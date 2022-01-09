@@ -1,6 +1,6 @@
 import re
 
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -43,9 +43,14 @@ class Configuration(Base):
         return True
 
     @staticmethod
-    def load(db_session):
-        """Load active configuration from"""
-        configuration = db_session.query(Configuration).filter(Configuration.active == True).one_or_none()
+    def load(db_session, name=None):
+        """Load active or selected configuration from DB."""
+        if name is None:
+            configuration = db_session.query(Configuration) \
+                .filter(Configuration.active == True).one_or_none()
+        else:
+            configuration = db_session.query(Configuration) \
+                .filter(Configuration.name == name).one_or_none()
         return configuration
 
 
@@ -220,3 +225,38 @@ Tab.cells = relationship("Cell", cascade="all,delete", order_by=Cell.id, back_po
 
 SensorCell.sensor = relationship("Sensor", back_populates="cell_sensors")
 SensorCell.cell = relationship("Cell", back_populates="cell_sensors")
+
+
+class Address(Base):
+    """Adress model."""
+    __tablename__ = 'address'
+
+    # table fields
+    id = Column(Integer, primary_key=True)
+    ip_port = Column(String, nullable=False, unique=True)
+    use_datetime = Column(DateTime, nullable=False)
+
+    def __repr__(self):
+        """Create string representation of an address object."""
+        return f'Address({self.ip_port})'
+
+    def __str__(self):
+        """Create a string value of an address object."""
+        return self.ip_port
+
+    @staticmethod
+    def validate(address):
+        """Validate ip address and port."""
+        if not re.match(r"^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5}$", address):
+            raise ValueError("IP address is invalid (should be IPv4)!")
+
+        ip, port = address.split(':')
+        ip_numbers = [int(x) for x in ip.split('.')]
+        for number in ip_numbers:
+            if number < 0 or number > 255:
+                raise ValueError("IP address is invalid (should be IPv4)!")
+
+        if int(port) < 49152 or int(port) > 65535:
+            raise ValueError("Port should be a private port (49152 through 65535)!")
+
+        return True
