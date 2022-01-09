@@ -3,13 +3,13 @@ import os
 import re
 
 from PySide6.QtGui import QAction
-from PySide6.QtNetwork import QTcpSocket, QHostAddress
+from PySide6.QtNetwork import QTcpSocket, QHostAddress, QAbstractSocket
 from PySide6.QtWidgets import QMainWindow, QMenuBar, QMenu, QStatusBar, QWidget, QMessageBox, \
     QFileDialog
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.models.models import Configuration
+from src.models.models import Configuration, Address
 from src.widgets.adress_window import AddressWindow
 from src.widgets.configuration_settings_window import ConfigurationSettingsWindow
 from src.widgets.console_widget import ConsoleWidget
@@ -271,9 +271,13 @@ class MainWindow(QMainWindow):
 
     def _connect(self):
         """Connect to data source."""
-        self._active_session = True
         self._socket.abort()
-        self._socket.connectToHost("127.0.0.1", 64363)
+        db_session = self._session_maker()
+        address = db_session.query(Address).order_by(Address.use_datetime.desc()).first()
+        db_session.close()
+        ip, port = address.ip_port.split(':')
+        print("connecting to " + ip + ":" + str(port))
+        self._socket.connectToHost(ip, int(port))
 
     def _read_from_socket(self):
         """Reads data from socket when new data arrives."""
@@ -357,7 +361,13 @@ class MainWindow(QMainWindow):
 
     def _show_socket_error(self, error):
         """Show socket error when it occurs."""
-        print(error)
+        if error is QAbstractSocket.SocketError.ConnectionRefusedError:
+            QMessageBox.critical(self, "Error!",
+                                 'Connection failed!',
+                                 QMessageBox.Ok, QMessageBox.Ok)
+            self._stop_session()
+        else:
+            print(error)
 
     def close_event(self, event):
         """Finish work with resources before closing."""
