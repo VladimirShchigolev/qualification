@@ -48,6 +48,9 @@ class MainWindow(QMainWindow):
         self._socket = QTcpSocket(self)
         self._socket.readyRead.connect(self._read_from_socket)
         self._socket.errorOccurred.connect(self._show_socket_error)
+        self._socket.connected.connect(lambda:
+                                       QMessageBox.information(self, "Connected", "Successfully connected "
+                                                               "to the data source", QMessageBox.Ok, QMessageBox.Ok))
 
         # set state
         self._active_session = False
@@ -204,6 +207,8 @@ class MainWindow(QMainWindow):
 
         filename, _ = QFileDialog.getOpenFileName(self, "Open recording",
                                                   filter="Text files (*.txt)")
+        if not filename:
+            return
         try:
             file = open(filename, 'r')
         except FileNotFoundError:
@@ -247,13 +252,24 @@ class MainWindow(QMainWindow):
             else:
                 line = first_line
 
-            # process the data in file
-            while line:
-                self._process_data(line)
-                line = file.readline()
+            confirmation = QMessageBox.question(
+                self, "File loading",
+                'Loading the file can take some time, depending on the size.\n'
+                'You will be notified when loading is complete.\n\nClick Ok to continue.',
+                QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok
+            )
+            if confirmation == QMessageBox.Ok:
+                # process the data in file
+                while line:
+                    self._process_data(line)
+                    line = file.readline()
 
-            file.close()
-            self._action_close.setDisabled(False)
+                QMessageBox.information(self, "File loaded", "File loaded!", QMessageBox.Yes, QMessageBox.Yes)
+                file.close()
+                self._action_close.setDisabled(False)
+            else:
+                file.close()
+                self._stop_session()
 
     def _stop_session(self):
         """Stop active session of file reading session."""
@@ -299,6 +315,7 @@ class MainWindow(QMainWindow):
 
     def _process_data(self, line):
         """Process the data in the given string."""
+
         def check_correctness(data):
             correct = True
             # check if obligatory fields are in data
@@ -322,7 +339,7 @@ class MainWindow(QMainWindow):
         # save to file if recording is enabled
         if self._recording:
             try:
-                self._record_file.write(line+"\n")
+                self._record_file.write(line + "\n")
                 # save changes to the file
                 self._record_file.flush()
                 os.fsync(self._record_file.fileno())
@@ -356,13 +373,14 @@ class MainWindow(QMainWindow):
 
     def _update_graphs(self, data):
         """Add new points to the graphs."""
+
         def timestamp_to_seconds(timestamp):
             """Turns string timestamp into seconds"""
             # timestamp format:
             # HH:MM:SS.mmm
             h, m, s_and_ms = timestamp.split(":")
             s, ms = s_and_ms.split(".")
-            return int(h)*3600 + int(m)*60 + int(s) + int(ms) / 1000
+            return int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000
 
         seconds = timestamp_to_seconds(data["timestamp"])
         for sensor, value in data["sensors"].items():
