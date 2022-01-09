@@ -195,7 +195,7 @@ class MainWindow(QMainWindow):
                     self._recording = True
                     self._action_record.setText("Stop Recording")
                     self._record_file.write(
-                        f'{"configuration": "{self._configuration.name}"}')
+                        '{"configuration": ' + f'"{self._configuration.name}"' + '}\n')
 
     def _open_record(self):
         """Open record file."""
@@ -230,7 +230,9 @@ class MainWindow(QMainWindow):
                 configuration_suggestion = None
 
             if configuration_suggestion and "configuration" in configuration_suggestion:
-                configuration = Configuration.find(configuration_suggestion["configuration"])
+                db_session = self._session_maker()
+                configuration = Configuration.find(db_session, configuration_suggestion["configuration"])
+                db_session.close()
                 if configuration is not None:
                     confirmation = QMessageBox.question(
                         self, "Select configuration",
@@ -238,7 +240,7 @@ class MainWindow(QMainWindow):
                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes
                     )
                     if confirmation == QMessageBox.Yes:
-                        self._load_configuration(configuration)
+                        self._load_configuration(configuration.name)
 
                 line = file.readline()
             else:
@@ -357,6 +359,11 @@ class MainWindow(QMainWindow):
         for sensor, value in data["sensors"].items():
             if sensor in self._graphs:
                 for graph in self._graphs[sensor]:
+                    graph.update_data(seconds, value, line=sensor)
+            elif self._configuration.show_unknown_sensors:
+                graph = self._tabs.add_unknown_sensor(sensor)
+                if graph:
+                    self._graphs[sensor] = [graph]
                     graph.update_data(seconds, value, line=sensor)
 
     def _show_socket_error(self, error):

@@ -53,6 +53,11 @@ class Configuration(Base):
                 .filter(Configuration.name == name).one_or_none()
         return configuration
 
+    @staticmethod
+    def find(db_session, name):
+        """Finds a configuration with a given name."""
+        return db_session.query(Configuration).filter(Configuration.name == name).one_or_none()
+
 
 class SensorCell(Base):
     """Cell and Sensors NxM relationship model."""

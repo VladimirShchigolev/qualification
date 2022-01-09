@@ -23,39 +23,46 @@ class GraphWidget(PlotWidget):
     LABEL_MIN_SIZE = 10
     LABEL_MAX_SIZE = 18
 
-    def __init__(self, cell, *args, **kwargs):
+    def __init__(self, cell, unknown_sensor=None, *args, **kwargs):
         """Create graph widget."""
         super().__init__(*args, **kwargs)
 
         self._cell = cell
 
         # set title and time axis
-        self.setTitle(cell.title, color='#444444', size='18pt')
+        if unknown_sensor:
+            self._title = unknown_sensor
+        else:
+            self._title = cell.title
+        self.setTitle(self._title, color='#444444', size='18pt')
         self.setLabel('bottom', "Time, s", **{'color': '#444444', 'font-size': '14pt'})
 
         self.setBackground("#ffffff")
 
-        # get sensors of the cell
-        self._sensors = []
-        for sensor_cell in cell.cell_sensors:
-            self._sensors.append(sensor_cell.sensor)
+        if not unknown_sensor:
+            self._colspan = self._cell.colspan
+            # get sensors of the cell and set left label
+            self._sensors = []
+            for sensor_cell in cell.cell_sensors:
+                self._sensors.append(sensor_cell.sensor)
 
-        value, unit = self._sensors[0].physical_value, self._sensors[0].physical_unit
-        if value == "-":
-            value = ""
-        if unit == "-" or unit == "":
-            unit = ""
+            value, unit = self._sensors[0].physical_value, self._sensors[0].physical_unit
+            if value == "-":
+                value = ""
+            if unit == "-" or unit == "":
+                unit = ""
+            else:
+                unit = ", " + unit
+
+            self._left_label_text = value + unit
+            if len(self._left_label_text) > 30:
+                self._split_left_label()
+
+            self.setLabel('left', self._left_label_text, **{'color': '#444444', 'font-size': '14pt',
+                                                            'overflow-wrap': 'break-word'})
         else:
-            unit = ", " + unit
-
-        self._left_label_text = value + unit
-        if len(self._left_label_text) > 30:
-            self._split_left_label()
-
-        print(self._left_label_text)
-        self.setLabel('left', self._left_label_text, **{'color': '#444444', 'font-size': '14pt',
-                                                        'overflow-wrap': 'break-word'})
-
+            self._left_label_text = None
+            self._colspan = 1
         # set grid and autorange
         self.showGrid(x=True, y=True)
         self.getPlotItem().getViewBox().enableAutoRange()
@@ -71,15 +78,22 @@ class GraphWidget(PlotWidget):
         self._data_lines = {}
         self._x = {}
         self._y = {}
-        sensor_number = 0
-        for sensor in self._sensors:
-            color = colors[sensor_number]
-            self._data_lines[sensor.short_name] = self.plot(name=sensor.short_name,
-                                                            pen=mkPen(color, width=2))
-            self._x[sensor.short_name] = []
-            self._y[sensor.short_name] = []
+        if not unknown_sensor:
+            sensor_number = 0
+            for sensor in self._sensors:
+                color = colors[sensor_number]
+                self._data_lines[sensor.short_name] = self.plot(name=sensor.short_name,
+                                                                pen=mkPen(color, width=2))
+                self._x[sensor.short_name] = []
+                self._y[sensor.short_name] = []
 
-            sensor_number += 1
+                sensor_number += 1
+        else:
+            self._sensors = None
+            self._data_lines[unknown_sensor] = self.plot(name=unknown_sensor, pen=mkPen(colors[0], width=2))
+
+            self._x[unknown_sensor] = []
+            self._y[unknown_sensor] = []
 
     def update_data(self, x, y, line=""):
         """Add a point to the graph."""
@@ -137,7 +151,7 @@ class GraphWidget(PlotWidget):
         left_label_size = min(left_label_size, self.LABEL_MAX_SIZE)
         left_label_size = max(left_label_size, self.LABEL_MIN_SIZE)
 
-        title = self._cell.title
+        title = self._title
         if len(title) > 20:
             title_size = max(self.TITLE_MIN_SIZE, title_size - 2)
         if len(title) > 25:
@@ -161,4 +175,4 @@ class GraphWidget(PlotWidget):
 
     def heightForWidth(self, width):
         """Calculate height for given width."""
-        return width // (1.5 * self._cell.colspan)
+        return width // (1.5 * self._colspan)
