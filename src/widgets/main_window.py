@@ -297,6 +297,8 @@ class MainWindow(QMainWindow):
         self._action_record.setDisabled(True)
         self._action_close.setDisabled(True)
 
+        self._console.clear()
+
     def _start_new_session(self):
         """Start new active session."""
         self._stop_session()
