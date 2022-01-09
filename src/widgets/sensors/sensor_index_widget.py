@@ -118,5 +118,9 @@ class SensorIndexWidget(QWidget):
 
     def _create_sensor(self):
         """Open a sensor creating page."""
-        self.parentWidget().parentWidget().create_sensor(self._configuration,
-                                                         self._configuration_page)
+        sensors = self._db_session.query(Sensor).filter(Sensor.configuration == self._configuration).all()
+        if len(sensors) == 100:
+            raise ValueError("Sensor limit of 100 sensors is reached for this configuration!")
+        else:
+            self.parentWidget().parentWidget().create_sensor(self._configuration,
+                                                             self._configuration_page)
