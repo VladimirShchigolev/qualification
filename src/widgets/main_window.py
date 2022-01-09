@@ -410,6 +410,10 @@ class MainWindow(QMainWindow):
                                  'Connection failed!',
                                  QMessageBox.Ok, QMessageBox.Ok)
             self._stop_session()
+        elif error is QAbstractSocket.SocketError.RemoteHostClosedError:
+            QMessageBox.critical(self, "Error!",
+                                 'Connection interrupted!',
+                                 QMessageBox.Ok, QMessageBox.Ok)
         else:
             print(error)
 
