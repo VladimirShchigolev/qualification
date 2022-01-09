@@ -42,6 +42,7 @@ class MainWindow(QMainWindow):
         # set up recording control
         self._recording = False
         self._record_file = None
+        self._action_record.setDisabled(True)
 
         # set up TCP socket
         self._socket = QTcpSocket(self)
@@ -257,17 +258,25 @@ class MainWindow(QMainWindow):
     def _stop_session(self):
         """Stop active session of file reading session."""
         if self._active_session:
+            # disconnect
             self._socket.disconnectFromHost()
             self._active_session = False
+            # stop recording
+            if self._recording:
+                self._record()
         self._load_configuration()
         self._opened_file = False
 
+        # block recording when not in active session
+        self._action_record.setDisabled(True)
         self._action_close.setDisabled(True)
 
     def _start_new_session(self):
         """Start new active session."""
         self._stop_session()
         self._active_session = True
+
+        self._action_record.setDisabled(False)
         self._action_close.setDisabled(False)
         self._connect()
 
