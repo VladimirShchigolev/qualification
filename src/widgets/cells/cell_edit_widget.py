@@ -45,7 +45,7 @@ class CellEditWidget(QWidget):
 
         # set validation rules to 1-30 characters in length
         self._title_line.setValidator(
-            QRegularExpressionValidator(QRegularExpression(r'.{1,50}'))
+            QRegularExpressionValidator(QRegularExpression(r'[^ ].{0,49}'))
         )
 
         # create sensor search combo box
@@ -138,6 +138,16 @@ class CellEditWidget(QWidget):
     def _update_title(self):
         """Update cell title in the grid representation."""
         if self._title_line.text() != self._cell.title:
+            # change empty title to [Sensor Type] Group
+            if self._title_line.text() == "":
+                # get assigned sensor
+                assigned_sensor = self._db_session.query(Sensor) \
+                    .join(SensorCell) \
+                    .filter(SensorCell.cell == self._cell) \
+                    .first()
+
+                self._title_line.setText(assigned_sensor.physical_value + " Group")
+
             self._cell.title = self._title_line.text()
             self.parentWidget().update_cell_title(self._cell)
 
@@ -212,7 +222,7 @@ class CellEditWidget(QWidget):
     def _remove_sensor(self):
         """Remove sensor from the cell."""
         # get selected items
-        selected_items = self._sensors_list.selected_items()
+        selected_items = self._sensors_list.selectedItems()
 
         if selected_items:
             # sensor to delete is the first and only selected item

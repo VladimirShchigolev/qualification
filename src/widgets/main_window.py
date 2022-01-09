@@ -133,7 +133,7 @@ class MainWindow(QMainWindow):
         # create new graph tabs page
         self._tabs = GraphTabWidget(configuration)
         self._graphs = self._tabs.get_graphs()
-        print(self._graphs)
+
         self.setCentralWidget(self._tabs)
 
     def _open_console(self):
