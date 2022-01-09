@@ -57,6 +57,9 @@ class ConfigurationSettingsWindow(QWidget):
         """Show the given configuration."""
         self._clear_window()
 
+        # commit tab and sensor changes if there are any
+        self._db_session.commit()
+
         # show selected configuration;
         # set central widget to configuration view widget
         self._widget = ConfigurationViewWidget(self._db_session, configuration)
