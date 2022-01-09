@@ -59,6 +59,7 @@ class ConfigurationViewWidget(QWidget):
         self._buttons_layout.setContentsMargins(10, 0, 10, 0)
 
         self._load_button = QPushButton("Load")
+        self._load_button.clicked.connect(self._load)
         self._edit_button = QPushButton("Edit")
         self._edit_button.clicked.connect(self._edit_configuration)
         self._delete_button = QPushButton("Delete")
@@ -96,6 +97,10 @@ class ConfigurationViewWidget(QWidget):
     def _edit_configuration(self):
         """Open configuration editing page."""
         self.parentWidget().edit_configuration(self._configuration)
+
+    def _load(self):
+        """Set selected configuration as active and load it."""
+        self.parentWidget().activate_configuration(self._configuration.name)
 
     def _delete(self):
         """Delete the configuration."""

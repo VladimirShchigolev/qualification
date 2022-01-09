@@ -160,9 +160,19 @@ class MainWindow(QMainWindow):
 
         db_session.close()
 
+    def activate_configuration(self, configuration_name):
+        """Set selected configuration as active and load it."""
+        db_session = self._session_maker()
+        Configuration.activate(db_session, configuration_name)
+        db_session.close()
+
+        self._stop_session()
+        self._load_configuration()
+
     def _open_configurations(self):
         """Open configuration settings window."""
         self._configurations_window = ConfigurationSettingsWindow(self._session_maker)
+        self._configurations_window.parent = self
         self._configurations_window.show()
 
     def _open_data_source_settings(self):

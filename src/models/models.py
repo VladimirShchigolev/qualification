@@ -47,10 +47,27 @@ class Configuration(Base):
         if name is None:
             configuration = db_session.query(Configuration) \
                 .filter(Configuration.active == True).one_or_none()
+
+            if not configuration:
+                configuration = db_session.query(Configuration).filter(Configuration.name == "Default").one_or_none()
+                configuration.active = True
+                db_session.commit()
         else:
             configuration = db_session.query(Configuration) \
                 .filter(Configuration.name == name).one_or_none()
         return configuration
+
+    @staticmethod
+    def activate(db_session, name):
+        """Set selected configuration as active."""
+        current_active = db_session.query(Configuration).filter(Configuration.active == True).one_or_none()
+        if current_active:
+            current_active.active = False
+
+        new_active = db_session.query(Configuration).filter(Configuration.name == name).one_or_none()
+        if new_active:
+            new_active.active = True
+            db_session.commit()
 
     @staticmethod
     def find(db_session, name):

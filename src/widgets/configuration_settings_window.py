@@ -82,6 +82,11 @@ class ConfigurationSettingsWindow(QWidget):
         self._widget = ConfigurationIndexWidget(self._db_session)
         self._layout.addWidget(self._widget)
 
+    def activate_configuration(self, configuration_name):
+        """Set selected configuration as active and load it."""
+        self.parent.activate_configuration(configuration_name)
+        self.close()
+
     def create_sensor(self, configuration, configuration_page="view"):
         """Open sensor creation page."""
         self._clear_window()
