@@ -57,6 +57,9 @@ class ConfigurationSettingsWindow(QWidget):
         """Show the given configuration."""
         self._clear_window()
 
+        # commit tab and sensor changes if there are any
+        self._db_session.commit()
+
         # show selected configuration;
         # set central widget to configuration view widget
         self._widget = ConfigurationViewWidget(self._db_session, configuration)
@@ -78,6 +81,11 @@ class ConfigurationSettingsWindow(QWidget):
         # set central widget to configuration index widget
         self._widget = ConfigurationIndexWidget(self._db_session)
         self._layout.addWidget(self._widget)
+
+    def activate_configuration(self, configuration_name):
+        """Set selected configuration as active and load it."""
+        self.parent.activate_configuration(configuration_name)
+        self.close()
 
     def create_sensor(self, configuration, configuration_page="view"):
         """Open sensor creation page."""

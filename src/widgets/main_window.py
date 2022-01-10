@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QMainWindow, QMenuBar, QMenu, QStatusBar, QWidget,
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.models import Configuration, Address
-from src.widgets.adress_window import AddressWindow
+from src.widgets.address_window import AddressWindow
 from src.widgets.configuration_settings_window import ConfigurationSettingsWindow
 from src.widgets.console_widget import ConsoleWidget
 from src.widgets.graphs.graph_tab_widget import GraphTabWidget
@@ -42,11 +42,15 @@ class MainWindow(QMainWindow):
         # set up recording control
         self._recording = False
         self._record_file = None
+        self._action_record.setDisabled(True)
 
         # set up TCP socket
         self._socket = QTcpSocket(self)
         self._socket.readyRead.connect(self._read_from_socket)
         self._socket.errorOccurred.connect(self._show_socket_error)
+        self._socket.connected.connect(lambda:
+                                       QMessageBox.information(self, "Connected", "Successfully connected "
+                                                               "to the data source", QMessageBox.Ok, QMessageBox.Ok))
 
         # set state
         self._active_session = False
@@ -129,7 +133,7 @@ class MainWindow(QMainWindow):
         # create new graph tabs page
         self._tabs = GraphTabWidget(configuration)
         self._graphs = self._tabs.get_graphs()
-        print(self._graphs)
+
         self.setCentralWidget(self._tabs)
 
     def _open_console(self):
@@ -156,9 +160,19 @@ class MainWindow(QMainWindow):
 
         db_session.close()
 
+    def activate_configuration(self, configuration_name):
+        """Set selected configuration as active and load it."""
+        db_session = self._session_maker()
+        Configuration.activate(db_session, configuration_name)
+        db_session.close()
+
+        self._stop_session()
+        self._load_configuration()
+
     def _open_configurations(self):
         """Open configuration settings window."""
         self._configurations_window = ConfigurationSettingsWindow(self._session_maker)
+        self._configurations_window.parent = self
         self._configurations_window.show()
 
     def _open_data_source_settings(self):
@@ -195,7 +209,7 @@ class MainWindow(QMainWindow):
                     self._recording = True
                     self._action_record.setText("Stop Recording")
                     self._record_file.write(
-                        f'{"configuration": "{self._configuration.name}"}')
+                        '{"configuration": ' + f'"{self._configuration.name}"' + '}\n')
 
     def _open_record(self):
         """Open record file."""
@@ -203,6 +217,8 @@ class MainWindow(QMainWindow):
 
         filename, _ = QFileDialog.getOpenFileName(self, "Open recording",
                                                   filter="Text files (*.txt)")
+        if not filename:
+            return
         try:
             file = open(filename, 'r')
         except FileNotFoundError:
@@ -230,7 +246,9 @@ class MainWindow(QMainWindow):
                 configuration_suggestion = None
 
             if configuration_suggestion and "configuration" in configuration_suggestion:
-                configuration = Configuration.find(configuration_suggestion["configuration"])
+                db_session = self._session_maker()
+                configuration = Configuration.find(db_session, configuration_suggestion["configuration"])
+                db_session.close()
                 if configuration is not None:
                     confirmation = QMessageBox.question(
                         self, "Select configuration",
@@ -238,34 +256,55 @@ class MainWindow(QMainWindow):
                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes
                     )
                     if confirmation == QMessageBox.Yes:
-                        self._load_configuration(configuration)
+                        self._load_configuration(configuration.name)
 
                 line = file.readline()
             else:
                 line = first_line
 
-            # process the data in file
-            while line:
-                self._process_data(line)
-                line = file.readline()
+            confirmation = QMessageBox.question(
+                self, "File loading",
+                'Loading the file can take some time, depending on the size.\n'
+                'You will be notified when loading is complete.\n\nClick Ok to continue.',
+                QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok
+            )
+            if confirmation == QMessageBox.Ok:
+                # process the data in file
+                while line:
+                    self._process_data(line)
+                    line = file.readline()
 
-            file.close()
-            self._action_close.setDisabled(False)
+                QMessageBox.information(self, "File loaded", "File loaded!", QMessageBox.Yes, QMessageBox.Yes)
+                file.close()
+                self._action_close.setDisabled(False)
+            else:
+                file.close()
+                self._stop_session()
 
     def _stop_session(self):
         """Stop active session of file reading session."""
         if self._active_session:
+            # disconnect
             self._socket.disconnectFromHost()
             self._active_session = False
+            # stop recording
+            if self._recording:
+                self._record()
         self._load_configuration()
         self._opened_file = False
 
+        # block recording when not in active session
+        self._action_record.setDisabled(True)
         self._action_close.setDisabled(True)
+
+        self._console.clear()
 
     def _start_new_session(self):
         """Start new active session."""
         self._stop_session()
         self._active_session = True
+
+        self._action_record.setDisabled(False)
         self._action_close.setDisabled(False)
         self._connect()
 
@@ -288,6 +327,7 @@ class MainWindow(QMainWindow):
 
     def _process_data(self, line):
         """Process the data in the given string."""
+
         def check_correctness(data):
             correct = True
             # check if obligatory fields are in data
@@ -311,7 +351,7 @@ class MainWindow(QMainWindow):
         # save to file if recording is enabled
         if self._recording:
             try:
-                self._record_file.write(line+"\n")
+                self._record_file.write(line + "\n")
                 # save changes to the file
                 self._record_file.flush()
                 os.fsync(self._record_file.fileno())
@@ -345,18 +385,24 @@ class MainWindow(QMainWindow):
 
     def _update_graphs(self, data):
         """Add new points to the graphs."""
+
         def timestamp_to_seconds(timestamp):
             """Turns string timestamp into seconds"""
             # timestamp format:
             # HH:MM:SS.mmm
             h, m, s_and_ms = timestamp.split(":")
             s, ms = s_and_ms.split(".")
-            return int(h)*3600 + int(m)*60 + int(s) + int(ms) / 1000
+            return int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000
 
         seconds = timestamp_to_seconds(data["timestamp"])
         for sensor, value in data["sensors"].items():
             if sensor in self._graphs:
                 for graph in self._graphs[sensor]:
+                    graph.update_data(seconds, value, line=sensor)
+            elif self._configuration.show_unknown_sensors:
+                graph = self._tabs.add_unknown_sensor(sensor)
+                if graph:
+                    self._graphs[sensor] = [graph]
                     graph.update_data(seconds, value, line=sensor)
 
     def _show_socket_error(self, error):
@@ -366,10 +412,15 @@ class MainWindow(QMainWindow):
                                  'Connection failed!',
                                  QMessageBox.Ok, QMessageBox.Ok)
             self._stop_session()
+        elif error is QAbstractSocket.SocketError.RemoteHostClosedError:
+            QMessageBox.critical(self, "Error!",
+                                 'Connection interrupted!',
+                                 QMessageBox.Ok, QMessageBox.Ok)
         else:
             print(error)
 
     def close_event(self, event):
         """Finish work with resources before closing."""
         self._tabs.close()
+        self._stop_session()
         event.accept()

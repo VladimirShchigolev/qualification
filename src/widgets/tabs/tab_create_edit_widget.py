@@ -172,7 +172,28 @@ class TabCreateEditWidget(QWidget):
         Resize the grid by deleting old cells if new height
         or new width are smaller than the old ones. Create new
         cells if new width or new height are greater than the old ones.
+        If resizing splits a cell in half -
+        split this cell into atomic cells.
         """
+        def split_cell(cell):
+            """Split cell into atomic cells."""
+            # create all others atomic cells
+            for row in range(cell.row, cell.row + cell.rowspan):
+                for column in range(cell.column, cell.column + cell.colspan):
+                    if row != cell.row or column != cell.column:
+                        # create an atomic cell
+                        Cell(tab=self._tab, row=row, column=column)
+
+            # set upper left cell's rowspan and colspan to 1
+            cell.rowspan = 1
+            cell.colspan = 1
+
+        cells = self._db_session.query(Cell).filter(Cell.tab == self._tab).all()
+        for cell in cells:
+            if cell.row < new_height < cell.row + cell.rowspan \
+                    or cell.column < new_width < cell.column + cell.colspan:
+                split_cell(cell)
+
         # delete cells that are beyond new grid size
         self._db_session.query(Cell).filter(Cell.tab == self._tab) \
             .filter(Cell.column >= new_width).delete(synchronize_session=False)

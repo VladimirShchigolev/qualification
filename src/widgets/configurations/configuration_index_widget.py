@@ -55,6 +55,7 @@ class ConfigurationIndexWidget(QWidget):
         self._new_button = QPushButton("New")
         self._new_button.clicked.connect(self._create_configuration)
         self._load_button = QPushButton("Load")
+        self._load_button.clicked.connect(self._load_selected_configuration)
         self._view_button = QPushButton("View")
         self._view_button.clicked.connect(self._show_selected_configuration)
         self._close_button = QPushButton("Close")
@@ -91,6 +92,15 @@ class ConfigurationIndexWidget(QWidget):
     def _create_configuration(self):
         """Open configuration creation page."""
         self.parentWidget().create_configuration()
+
+    def _load_selected_configuration(self):
+        """Set selected configuration as active and load it."""
+        # get selected items
+        selected_items = self._configurations_list.selectedItems()
+        if selected_items:
+            # take the first and only item
+            configuration_name = selected_items[0].data(0)
+            self.parentWidget().activate_configuration(configuration_name)
 
     def _show_selected_configuration(self):
         """Open view page for the selected configuration."""

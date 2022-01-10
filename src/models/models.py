@@ -29,12 +29,11 @@ class Configuration(Base):
         """Check if given fields are valid."""
 
         if check_for_duplicates:
-            # check if sensor with such short name
-            # exists in this configuration
-            sensor = db_session.query(Configuration).filter(
+            # check if configuration with such name exists
+            configuration = db_session.query(Configuration).filter(
                 Configuration.name == name).one_or_none()
-            if sensor:
-                raise ValueError("A configuration with such short name already exists!")
+            if configuration:
+                raise ValueError("A configuration with such name already exists!")
 
         # name length
         if not 1 <= len(name) <= 30:
@@ -48,10 +47,32 @@ class Configuration(Base):
         if name is None:
             configuration = db_session.query(Configuration) \
                 .filter(Configuration.active == True).one_or_none()
+
+            if not configuration:
+                configuration = db_session.query(Configuration).filter(Configuration.name == "Default").one_or_none()
+                configuration.active = True
+                db_session.commit()
         else:
             configuration = db_session.query(Configuration) \
                 .filter(Configuration.name == name).one_or_none()
         return configuration
+
+    @staticmethod
+    def activate(db_session, name):
+        """Set selected configuration as active."""
+        current_active = db_session.query(Configuration).filter(Configuration.active == True).one_or_none()
+        if current_active:
+            current_active.active = False
+
+        new_active = db_session.query(Configuration).filter(Configuration.name == name).one_or_none()
+        if new_active:
+            new_active.active = True
+            db_session.commit()
+
+    @staticmethod
+    def find(db_session, name):
+        """Finds a configuration with a given name."""
+        return db_session.query(Configuration).filter(Configuration.name == name).one_or_none()
 
 
 class SensorCell(Base):
@@ -97,8 +118,7 @@ class Sensor(Base):
         return self.short_name
 
     @staticmethod
-    def validate(configuration, short_name, name, physical_value, physical_unit,
-                 check_for_duplicates=True,
+    def validate(configuration, short_name, name, physical_value, physical_unit, check_for_duplicates=True,
                  db_session=None):
         """Check if given fields are valid."""
 
@@ -126,12 +146,15 @@ class Sensor(Base):
             raise ValueError("Name should be 1 to 30 characters long!")
 
         # physical value length
-        if not 1 <= len(physical_value) <= 40:
+        if not 0 <= len(physical_value) <= 40:
             raise ValueError("Physical value should be 1 to 40 characters long!")
 
         # physical unit length
-        if not 1 <= len(physical_unit) <= 10:
+        if not 0 <= len(physical_unit) <= 10:
             raise ValueError("Physical unit should be 1 to 10 characters long!")
+
+        if physical_unit and not physical_value:
+            raise ValueError("Physical value cannot be empty while physical unit is set!")
 
         return True
 
@@ -166,6 +189,13 @@ class Tab(Base):
     def validate(configuration, name, grid_width, grid_height, check_for_duplicates=True,
                  db_session=None):
         """Check if given fields are valid."""
+
+        # tabs = db_session.query(Tab).filter(Tab.configuration == configuration).all()
+        # if len(tabs) == 10:
+        #     raise ValueError("Tab limit of 10 tabs is reached for this configuration!")
+
+        if name.lower() == 'unknown':
+            raise ValueError('Tab name "Unknown" is reserved!')
 
         if check_for_duplicates:
             # check if a tab with such name exists in the configuration

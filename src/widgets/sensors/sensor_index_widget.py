@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit, \
-    QLabel, QHBoxLayout, QPushButton
+    QLabel, QHBoxLayout, QPushButton, QMessageBox
 
 from src.models.models import Sensor
 
@@ -118,5 +118,10 @@ class SensorIndexWidget(QWidget):
 
     def _create_sensor(self):
         """Open a sensor creating page."""
-        self.parentWidget().parentWidget().create_sensor(self._configuration,
-                                                         self._configuration_page)
+        sensors = self._db_session.query(Sensor).filter(Sensor.configuration == self._configuration).all()
+        if len(sensors) == 100:
+            QMessageBox.critical(self, "Error!", "Sensor limit of 100 sensors is reached for this configuration!",
+                                 QMessageBox.Ok, QMessageBox.Ok)
+        else:
+            self.parentWidget().parentWidget().create_sensor(self._configuration,
+                                                             self._configuration_page)
